@@ -2,7 +2,7 @@
 <html>
 <head>
   <meta charset="utf-8">
-  <title>3D Map with Grouped Toggle</title>
+  <title>3D Map with Grouped Layers</title>
 
   <link rel="stylesheet" href="https://js.arcgis.com/4.24/esri/themes/light/main.css">
 
@@ -85,89 +85,19 @@
 <div id="sidePanel">
   <h2>Layer Controls</h2>
 
-  <!-- GROUPED LAYER -->
+  <!-- WALKING ANALYSIS -->
+  <div class="layer-control">
+    <label>Walking Time Analysis</label><br>
+    <label class="switch">
+      <input type="checkbox" id="walkingToggle" checked>
+      <span class="slider"></span>
+    </label>
+  </div>
+
+  <!-- BUILDING + AREA -->
   <div class="layer-control">
     <label>Main Building + Oxnehaga Area</label><br>
     <label class="switch">
       <input type="checkbox" id="groupToggle" checked>
       <span class="slider"></span>
-    </label>
-  </div>
-
-</div>
-
-<div id="viewDiv"></div>
-
-<script src="https://js.arcgis.com/4.24/"></script>
-
-<script>
-require([
-  "esri/Map",
-  "esri/views/SceneView",
-  "esri/layers/GeoJSONLayer"
-], function(Map, SceneView, GeoJSONLayer) {
-
-  var map = new Map({
-    basemap: "topo-vector",
-    ground: "world-elevation"
-  });
-
-  var view = new SceneView({
-    container: "viewDiv",
-    map: map,
-    camera: {
-      position: {
-        longitude: 14.262597210092274,
-        latitude: 57.77663047365129,
-        z: 1200
-      },
-      tilt: 75
-    }
-  });
-
-  // 🔵 MAIN BYGGNAD
-  var mainLayer = new GeoJSONLayer({
-    url: "./Main_byggnad.geojson",
-    renderer: {
-      type: "simple",
-      symbol: {
-        type: "simple-fill",
-        color: [0, 120, 255, 0.4],
-        outline: {
-          color: "#0078ff",
-          width: 2
-        }
-      }
-    }
-  });
-
-  // 🟢 OXNEHAGA AREA (Contour Only)
-  var areaLayer = new GeoJSONLayer({
-    url: "./Oxnehaga-Area.geojson",
-    renderer: {
-      type: "simple",
-      symbol: {
-        type: "simple-fill",
-        color: [0, 0, 0, 0],
-        outline: {
-          color: "#00c853",
-          width: 3
-        }
-      }
-    }
-  });
-
-  map.addMany([mainLayer, areaLayer]);
-
-  // 🔘 ONE TOGGLE CONTROLS BOTH
-  document.getElementById("groupToggle").addEventListener("change", function() {
-    var visible = this.checked;
-    mainLayer.visible = visible;
-    areaLayer.visible = visible;
-  });
-
-});
-</script>
-
-</body>
-</html>
+    <
