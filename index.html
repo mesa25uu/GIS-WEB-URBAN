@@ -2,29 +2,101 @@
 <html>
 <head>
   <meta charset="utf-8">
-  <title>3D Map with Train GeoJSON</title>
+  <title>3D Map with Train Toggle</title>
 
   <!-- ArcGIS CSS -->
   <link rel="stylesheet" href="https://js.arcgis.com/4.24/esri/themes/light/main.css">
 
   <style>
-    html, body, #viewDiv {
+    html, body {
       height: 100%;
       width: 100%;
       margin: 0;
       padding: 0;
-    }
-
-    h1 {
-      text-align: center;
+      display: flex;
       font-family: Arial, sans-serif;
     }
+
+    /* LEFT SIDE PANEL */
+    #sidePanel {
+      width: 250px;
+      background-color: #1f2a38;
+      color: white;
+      padding: 20px;
+      box-sizing: border-box;
+    }
+
+    #sidePanel h2 {
+      margin-top: 0;
+    }
+
+    /* MAP AREA */
+    #viewDiv {
+      flex: 1;
+    }
+
+    /* Toggle switch styling */
+    .switch {
+      position: relative;
+      display: inline-block;
+      width: 60px;
+      height: 34px;
+    }
+
+    .switch input {
+      opacity: 0;
+      width: 0;
+      height: 0;
+    }
+
+    .slider {
+      position: absolute;
+      cursor: pointer;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-color: #ccc;
+      transition: .4s;
+      border-radius: 34px;
+    }
+
+    .slider:before {
+      position: absolute;
+      content: "";
+      height: 26px;
+      width: 26px;
+      left: 4px;
+      bottom: 4px;
+      background-color: white;
+      transition: .4s;
+      border-radius: 50%;
+    }
+
+    input:checked + .slider {
+      background-color: #00c853;
+    }
+
+    input:checked + .slider:before {
+      transform: translateX(26px);
+    }
+
   </style>
 </head>
 
 <body>
 
-<h1>3D Map – Train Location</h1>
+<!-- LEFT PANEL -->
+<div id="sidePanel">
+  <h2>Train Layer Control</h2>
+  <label class="switch">
+    <input type="checkbox" id="trainToggle" checked>
+    <span class="slider"></span>
+  </label>
+  <p>Toggle Train Layer</p>
+</div>
+
+<!-- MAP -->
 <div id="viewDiv"></div>
 
 <!-- ArcGIS JavaScript -->
@@ -38,41 +110,53 @@ require([
   "esri/layers/GeoJSONLayer"
 ], function(Map, SceneView, SceneLayer, GeoJSONLayer) {
 
-  // 1️⃣ Create map
   var map = new Map({
     basemap: "topo-vector",
     ground: "world-elevation"
   });
 
-  // 2️⃣ Create 3D view and zoom to YOUR coordinate
   var view = new SceneView({
     container: "viewDiv",
     map: map,
     camera: {
       position: {
-        longitude: 14.262597210092274,  // 👈 longitude first
-        latitude: 57.77663047365129,   // 👈 latitude second
-        z: 1500                       // height (lower = closer)
+        longitude: 14.262597210092274,
+        latitude: 57.77663047365129,
+        z: 1200
       },
       tilt: 75
     }
   });
 
-  // 3️⃣ Add 3D buildings
+  // 3D Buildings
   var buildings = new SceneLayer({
     portalItem: {
       id: "ca0470dbbddb4db28bad74ed39949e25"
     }
   });
-
   map.add(buildings);
 
-  // 4️⃣ Add train layer
+  // 🎨 Train layer with custom RED color
   var trainLayer = new GeoJSONLayer({
-    url: "./train.geojson"
+    url: "./train.geojson",
+    renderer: {
+      type: "simple",
+      symbol: {
+        type: "simple-line",
+        color: "#ff3d00",  // 🔴 Train color
+        width: 4
+      }
+    }
   });
 
   map.add(trainLayer);
+
+  // 🎛 Toggle functionality
+  var toggle = document.getElementById("trainToggle");
+
+  toggle.addEventListener("change", function() {
+    trainLayer.visible = toggle.checked;
+  });
 
 });
 </script>
