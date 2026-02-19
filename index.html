@@ -3,48 +3,71 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="initial-scale=1,maximum-scale=1,user-scalable=no" />
-<title>3D Map with Info Panel</title>
+<title>GIS Web Urban</title>
 
 <link rel="stylesheet" href="https://js.arcgis.com/4.29/esri/themes/light/main.css" />
 <script src="https://js.arcgis.com/4.29/"></script>
 
 <style>
-  html, body, #viewDiv {
-    padding: 0;
-    margin: 0;
-    height: 100%;
-    width: 100%;
-  }
+html, body {
+  padding: 0;
+  margin: 0;
+  height: 100%;
+  width: 100%;
+  display: flex;
+  font-family: Arial, sans-serif;
+}
 
-  /* Small Layer Toggle */
-  .esri-layer-list {
-    font-size: 12px !important;
-  }
+/* LEFT SIDE PANEL */
+#sidePanel {
+  width: 250px;
+  background: #f4f4f4;
+  padding: 15px;
+  box-shadow: 2px 0 5px rgba(0,0,0,0.2);
+  overflow-y: auto;
+}
 
-  /* Fixed Info Panel */
-  #infoPanel {
-    position: absolute;
-    top: 20px;
-    right: 20px;
-    width: 300px;
-    max-height: 400px;
-    overflow-y: auto;
-    background: white;
-    padding: 15px;
-    border-radius: 8px;
-    box-shadow: 0 0 15px rgba(0,0,0,0.3);
-    z-index: 99;
-    font-size: 14px;
-  }
+/* MAP */
+#viewDiv {
+  flex: 1;
+}
 
-  #infoPanel h3 {
-    margin-top: 0;
-  }
+/* FIXED INFO PANEL RIGHT */
+#infoPanel {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  width: 280px;
+  max-height: 400px;
+  overflow-y: auto;
+  background: white;
+  padding: 15px;
+  border-radius: 8px;
+  box-shadow: 0 0 15px rgba(0,0,0,0.3);
+  z-index: 99;
+  font-size: 14px;
+}
+
+#infoPanel h3 {
+  margin-top: 0;
+}
+
+/* Smaller LayerList */
+.esri-layer-list {
+  font-size: 12px !important;
+}
 </style>
 </head>
 
 <body>
+
+<div id="sidePanel">
+  <h2>GIS Web Urban</h2>
+  <p>Select layers from the toggler.</p>
+</div>
+
 <div id="viewDiv"></div>
+
 <div id="infoPanel">
   <h3>Feature Info</h3>
   <div id="infoContent">Click on a feature...</div>
@@ -68,40 +91,65 @@ require([
     map: map,
     camera: {
       position: {
-        x: 15,
-        y: 57,
-        z: 200000
+        x: 14.16,
+        y: 57.78,
+        z: 5000
       },
-      tilt: 45
+      tilt: 60
     }
   });
 
-  // ✅ GeoJSON Layer
+  // LOAD ALL YOUR LAYERS
   const trainLayer = new GeoJSONLayer({
-    url: "train.geojson"
+    url: "./train.geojson",
+    title: "Train"
   });
 
-  map.add(trainLayer);
+  const mainBuilding = new GeoJSONLayer({
+    url: "./Main_byggnad.geojson",
+    title: "Main Building"
+  });
 
-  // ✅ Small Layer List
+  const areaLayer = new GeoJSONLayer({
+    url: "./Oxnehaga-Area.geojson",
+    title: "Oxnehaga Area"
+  });
+
+  const schoolLayer = new GeoJSONLayer({
+    url: "./Oxnehaga_school.geojson",
+    title: "School"
+  });
+
+  const routeLayer = new GeoJSONLayer({
+    url: "./Oxnehaga_school_route.geojson",
+    title: "School Route"
+  });
+
+  map.addMany([
+    trainLayer,
+    mainBuilding,
+    areaLayer,
+    schoolLayer,
+    routeLayer
+  ]);
+
+  // LAYER TOGGLER
   const layerList = new LayerList({
     view: view
   });
 
   view.ui.add(layerList, "top-left");
 
-  // ✅ Click Event to Show Attributes
+  // CLICK EVENT
   view.on("click", function(event) {
-
     view.hitTest(event).then(function(response) {
 
       if (response.results.length > 0) {
 
-        const result = response.results.find(r => r.graphic.layer === trainLayer);
+        const result = response.results.find(r => r.graphic.layer.type === "geojson");
 
         if (result) {
           const attributes = result.graphic.attributes;
-
           let content = "";
 
           for (let key in attributes) {
@@ -112,10 +160,10 @@ require([
         }
       }
     });
-
   });
 
 });
 </script>
+
 </body>
 </html>
