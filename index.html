@@ -4,7 +4,6 @@
   <meta charset="utf-8">
   <title>3D Map with Multiple Layer Toggles</title>
 
-  <!-- ArcGIS CSS -->
   <link rel="stylesheet" href="https://js.arcgis.com/4.24/esri/themes/light/main.css">
 
   <style>
@@ -17,7 +16,6 @@
       font-family: Arial, sans-serif;
     }
 
-    /* SIDE PANEL */
     #sidePanel {
       width: 260px;
       background-color: #1f2a38;
@@ -34,12 +32,10 @@
       margin-bottom: 20px;
     }
 
-    /* MAP */
     #viewDiv {
       flex: 1;
     }
 
-    /* Toggle switch */
     .switch {
       position: relative;
       display: inline-block;
@@ -90,7 +86,6 @@
 
 <body>
 
-<!-- SIDE PANEL -->
 <div id="sidePanel">
   <h2>Layer Controls</h2>
 
@@ -111,7 +106,7 @@
   </div>
 
   <div class="layer-control">
-    <label>Oxnehaga Area</label><br>
+    <label>Oxnehaga Area (Contour Only)</label><br>
     <label class="switch">
       <input type="checkbox" id="areaToggle" checked>
       <span class="slider"></span>
@@ -120,10 +115,8 @@
 
 </div>
 
-<!-- MAP -->
 <div id="viewDiv"></div>
 
-<!-- ArcGIS JavaScript -->
 <script src="https://js.arcgis.com/4.24/"></script>
 
 <script>
@@ -152,7 +145,6 @@ require([
     }
   });
 
-  // 3D Buildings
   var buildings = new SceneLayer({
     portalItem: {
       id: "ca0470dbbddb4db28bad74ed39949e25"
@@ -160,7 +152,7 @@ require([
   });
   map.add(buildings);
 
-  // 🔴 TRAIN (Line)
+  // 🔴 TRAIN
   var trainLayer = new GeoJSONLayer({
     url: "./train.geojson",
     renderer: {
@@ -174,7 +166,7 @@ require([
   });
   map.add(trainLayer);
 
-  // 🔵 MAIN BYGGNAD (Polygon or line auto-handled)
+  // 🔵 MAIN BYGGNAD
   var mainLayer = new GeoJSONLayer({
     url: "./Main_byggnad.geojson",
     renderer: {
@@ -191,17 +183,17 @@ require([
   });
   map.add(mainLayer);
 
-  // 🟢 OXNEHAGA AREA (Polygon)
+  // 🟢 OXNEHAGA CONTOUR ONLY
   var areaLayer = new GeoJSONLayer({
     url: "./Oxnehaga-Area.geojson",
     renderer: {
       type: "simple",
       symbol: {
         type: "simple-fill",
-        color: [0, 200, 83, 0.3],
+        color: [0, 0, 0, 0],   // fully transparent fill
         outline: {
           color: "#00c853",
-          width: 2
+          width: 3
         }
       }
     }
