@@ -1,8 +1,8 @@
-<!DOCTYPE html>
+<!DOCTYPE html> 
 <html>
 <head>
   <meta charset="utf-8">
-  <title>3D Map with Multiple Layer Toggles</title>
+  <title>3D Map with Grouped Walking Layer</title>
 
   <link rel="stylesheet" href="https://js.arcgis.com/4.24/esri/themes/light/main.css">
 
@@ -24,10 +24,6 @@
       box-sizing: border-box;
     }
 
-    #sidePanel h2 {
-      margin-top: 0;
-    }
-
     .layer-control {
       margin-bottom: 20px;
     }
@@ -39,8 +35,8 @@
     .switch {
       position: relative;
       display: inline-block;
-      width: 60px;
-      height: 34px;
+      width: 50px;
+      height: 26px;
     }
 
     .switch input {
@@ -58,14 +54,14 @@
       bottom: 0;
       background-color: #ccc;
       transition: .4s;
-      border-radius: 34px;
+      border-radius: 26px;
     }
 
     .slider:before {
       position: absolute;
       content: "";
-      height: 26px;
-      width: 26px;
+      height: 18px;
+      width: 18px;
       left: 4px;
       bottom: 4px;
       background-color: white;
@@ -78,7 +74,7 @@
     }
 
     input:checked + .slider:before {
-      transform: translateX(26px);
+      transform: translateX(24px);
     }
 
   </style>
@@ -89,26 +85,11 @@
 <div id="sidePanel">
   <h2>Layer Controls</h2>
 
+  <!-- Walking Analysis GROUP -->
   <div class="layer-control">
-    <label>Train Layer</label><br>
+    <label>Walking Time to Train Station</label><br>
     <label class="switch">
-      <input type="checkbox" id="trainToggle" checked>
-      <span class="slider"></span>
-    </label>
-  </div>
-
-  <div class="layer-control">
-    <label>Main Byggnad</label><br>
-    <label class="switch">
-      <input type="checkbox" id="mainToggle" checked>
-      <span class="slider"></span>
-    </label>
-  </div>
-
-  <div class="layer-control">
-    <label>Oxnehaga Area (Contour Only)</label><br>
-    <label class="switch">
-      <input type="checkbox" id="areaToggle" checked>
+      <input type="checkbox" id="walkingToggle" checked>
       <span class="slider"></span>
     </label>
   </div>
@@ -123,9 +104,8 @@
 require([
   "esri/Map",
   "esri/views/SceneView",
-  "esri/layers/SceneLayer",
   "esri/layers/GeoJSONLayer"
-], function(Map, SceneView, SceneLayer, GeoJSONLayer) {
+], function(Map, SceneView, GeoJSONLayer) {
 
   var map = new Map({
     basemap: "topo-vector",
@@ -145,72 +125,29 @@ require([
     }
   });
 
-  var buildings = new SceneLayer({
-    portalItem: {
-      id: "ca0470dbbddb4db28bad74ed39949e25"
-    }
-  });
-  map.add(buildings);
+  // 🟣 Walking analysis layers (3 separate files)
 
-  // 🔴 TRAIN
-  var trainLayer = new GeoJSONLayer({
-    url: "./train.geojson",
-    renderer: {
-      type: "simple",
-      symbol: {
-        type: "simple-line",
-        color: "#ff3d00",
-        width: 4
-      }
-    }
-  });
-  map.add(trainLayer);
-
-  // 🔵 MAIN BYGGNAD
-  var mainLayer = new GeoJSONLayer({
-    url: "./Main_byggnad.geojson",
-    renderer: {
-      type: "simple",
-      symbol: {
-        type: "simple-fill",
-        color: [0, 120, 255, 0.4],
-        outline: {
-          color: "#0078ff",
-          width: 2
-        }
-      }
-    }
-  });
-  map.add(mainLayer);
-
-  // 🟢 OXNEHAGA CONTOUR ONLY
-  var areaLayer = new GeoJSONLayer({
-    url: "./Oxnehaga-Area.geojson",
-    renderer: {
-      type: "simple",
-      symbol: {
-        type: "simple-fill",
-        color: [0, 0, 0, 0],   // fully transparent fill
-        outline: {
-          color: "#00c853",
-          width: 3
-        }
-      }
-    }
-  });
-  map.add(areaLayer);
-
-  // TOGGLES
-  document.getElementById("trainToggle").addEventListener("change", function() {
-    trainLayer.visible = this.checked;
+  var schoolLayer = new GeoJSONLayer({
+    url: "./Oxnehaga_school.geojson"
   });
 
-  document.getElementById("mainToggle").addEventListener("change", function() {
-    mainLayer.visible = this.checked;
+  var routeLayer = new GeoJSONLayer({
+    url: "./Oxnehaga_school_route.geojson"
   });
 
-  document.getElementById("areaToggle").addEventListener("change", function() {
-    areaLayer.visible = this.checked;
+  var stationLayer = new GeoJSONLayer({
+    url: "./Huskvarna_train_station.geojson"
+  });
+
+  map.addMany([schoolLayer, routeLayer, stationLayer]);
+
+  // 🔘 ONE toggle controls ALL THREE
+  document.getElementById("walkingToggle").addEventListener("change", function() {
+    var isVisible = this.checked;
+
+    schoolLayer.visible = isVisible;
+    routeLayer.visible = isVisible;
+    stationLayer.visible = isVisible;
   });
 
 });
@@ -218,4 +155,5 @@ require([
 
 </body>
 </html>
+
 
