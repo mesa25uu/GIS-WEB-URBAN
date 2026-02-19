@@ -9,7 +9,6 @@
     #sidePanel { width: 280px; background-color: #1f2a38; color: white; padding: 20px; z-index: 5; box-shadow: 2px 0 10px rgba(0,0,0,0.5); overflow-y: auto; }
     #viewDiv { flex: 1; height: 100vh; position: relative; background-color: #eee; }
     
-    /* Info Panel on the right */
     #infoPanel { 
       position: absolute; top: 20px; right: 20px; width: 300px; max-height: 70vh; 
       overflow-y: auto; background: white; border-radius: 8px; 
@@ -18,23 +17,20 @@
     .info-header { background: #4A90E2; color: white; padding: 10px 15px; border-radius: 8px 8px 0 0; font-weight: bold; }
     #infoContent { padding: 15px; font-size: 13px; color: #333; line-height: 1.6; }
     
-    /* Toggles */
     .layer-item { margin-bottom: 10px; display: flex; align-items: center; background: rgba(255,255,255,0.1); padding: 8px; border-radius: 4px; }
     .layer-item input { margin-right: 10px; cursor: pointer; }
     
-    /* Table styling */
     table { width: 100%; border-collapse: collapse; }
     td { padding: 6px 4px; border-bottom: 1px solid #eee; vertical-align: top; }
     .attr-key { font-weight: bold; color: #666; width: 40%; font-size: 11px; text-transform: uppercase; }
     
-    /* Special Button Styling */
     .project-button {
       display: inline-block; margin-top: 10px; padding: 10px 15px; 
-      background: #4A90E2; color: white; text-decoration: none; 
+      background: #d9534f; color: white; text-decoration: none; 
       border-radius: 4px; font-weight: bold; width: 100%; text-align: center;
       box-sizing: border-box;
     }
-    .project-button:hover { background: #357ABD; }
+    .project-button:hover { background: #c9302c; }
   </style>
 </head>
 <body>
@@ -59,6 +55,7 @@
       "esri/Map", "esri/views/SceneView", "esri/layers/GeoJSONLayer", "esri/widgets/Home"
     ], function(Map, SceneView, GeoJSONLayer, Home) {
 
+      const targetID = "86068c15-afde-4284-90fc-ad8735b25416";
       const map = new Map({ basemap: "topo-vector", ground: "world-elevation" });
 
       const view = new SceneView({
@@ -74,13 +71,22 @@
 
       view.ui.add(new Home({ view: view }), "top-left");
 
-      // Renderers
+      // --- 1. SPECIAL RENDERER (Red for specific ID, Blue for others) ---
+      // We check the field that contains your ID. Adjust "uuid" if your field name is different.
       const buildingRenderer = {
-        type: "simple",
-        symbol: {
+        type: "unique-value",
+        field: "uuid", // ⬅️ Change this to the exact column name in your GeoJSON that holds the ID
+        defaultSymbol: {
           type: "polygon-3d",
           symbolLayers: [{ type: "extrude", size: 15, material: { color: "#4A90E2" }, edges: { type: "solid", color: "white", size: 1 } }]
-        }
+        },
+        uniqueValueInfos: [{
+          value: targetID,
+          symbol: {
+            type: "polygon-3d",
+            symbolLayers: [{ type: "extrude", size: 25, material: { color: "#ff0000" }, edges: { type: "solid", color: "white", size: 2 } }]
+          }
+        }]
       };
 
       const areaRenderer = {
@@ -98,7 +104,7 @@
 
       map.addMany([areaLayer, mainByggnad, schoolLayer, schoolRoute, trainStation, trainLines]);
 
-      // Side Toggles
+      // Toggles
       const controls = document.getElementById("controls");
       function addToggle(label, layers) {
         const div = document.createElement("div");
@@ -116,7 +122,7 @@
       addToggle("Schools & Route", [schoolLayer, schoolRoute]);
       addToggle("Train Info", [trainStation, trainLines]);
 
-      // --- CLICK EVENT WITH SPECIAL ID LOGIC ---
+      // Click event
       view.on("click", (event) => {
         view.hitTest(event).then((response) => {
           const results = response.results.filter(r => r.graphic);
@@ -124,7 +130,6 @@
           if (results.length > 0) {
             const graphic = results[0].graphic;
             const attr = graphic.attributes;
-            const targetID = "86068c15-afde-4284-90fc-ad8735b25416";
 
             let tableHTML = "<table>";
             for (let key in attr) {
@@ -134,13 +139,13 @@
             }
             tableHTML += "</table>";
 
-            // Check if this object contains your specific ID
+            // Check if this object contains the target ID
             const isSpecialObject = Object.values(attr).includes(targetID);
 
             if (isSpecialObject) {
               tableHTML += `
-                <div style="margin-top: 15px; border-top: 2px solid #4A90E2; padding-top: 10px;">
-                  <p style="font-weight: bold; margin-bottom: 5px;">Project Document:</p>
+                <div style="margin-top: 15px; border-top: 2px solid #ff0000; padding-top: 10px;">
+                  <p style="font-weight: bold; color: #ff0000; margin-bottom: 5px;">🔴 Special Project Data:</p>
                   <a href="Project4.html" target="_blank" class="project-button">Open Project 4 File</a>
                 </div>`;
             }
