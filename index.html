@@ -13,8 +13,13 @@ html, body {
   margin: 0;
   padding: 0;
   height: 100%;
-  display: flex;
+  width: 100%;
   font-family: Arial, sans-serif;
+}
+
+#container {
+  display: flex;
+  height: 100vh;   /* IMPORTANT FIX */
 }
 
 /* LEFT PANEL */
@@ -26,8 +31,10 @@ html, body {
   overflow-y: auto;
 }
 
+/* MAP */
 #viewDiv {
   flex: 1;
+  height: 100%;   /* IMPORTANT FIX */
 }
 
 /* RIGHT INFO PANEL */
@@ -54,13 +61,17 @@ html, body {
 
 <body>
 
-<div id="sidePanel">
-  <h2>GIS Web Urban</h2>
-  <p>Layer control:</p>
-  <div id="layerListDiv"></div>
-</div>
+<div id="container">
 
-<div id="viewDiv"></div>
+  <div id="sidePanel">
+    <h2>GIS Web Urban</h2>
+    <p>Layer control:</p>
+    <div id="layerListDiv"></div>
+  </div>
+
+  <div id="viewDiv"></div>
+
+</div>
 
 <div id="infoPanel">
   <b>Feature Info</b>
@@ -82,7 +93,7 @@ require([
   const view = new MapView({
     container: "viewDiv",
     map: map,
-    center: [14.16, 57.78],  // Jönköping area
+    center: [14.16, 57.78],
     zoom: 14
   });
 
@@ -134,7 +145,7 @@ require([
 
   /* ===== LAYER LIST IN SIDE PANEL ===== */
 
-  const layerList = new LayerList({
+  new LayerList({
     view: view,
     container: "layerListDiv"
   });
@@ -144,20 +155,17 @@ require([
   view.on("click", function(event) {
     view.hitTest(event).then(function(response) {
 
-      if (response.results.length > 0) {
+      const result = response.results.find(r => r.graphic.layer.type === "geojson");
 
-        const result = response.results.find(r => r.graphic.layer.type === "geojson");
+      if (result) {
+        const attributes = result.graphic.attributes;
+        let content = "";
 
-        if (result) {
-          const attributes = result.graphic.attributes;
-          let content = "";
-
-          for (let key in attributes) {
-            content += "<b>" + key + "</b>: " + attributes[key] + "<br>";
-          }
-
-          document.getElementById("infoContent").innerHTML = content;
+        for (let key in attributes) {
+          content += "<b>" + key + "</b>: " + attributes[key] + "<br>";
         }
+
+        document.getElementById("infoContent").innerHTML = content;
       }
     });
   });
