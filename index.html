@@ -1,171 +1,142 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-<meta charset="utf-8" />
-<meta name="viewport" content="initial-scale=1,maximum-scale=1,user-scalable=no" />
-<title>GIS Web Urban</title>
+  <meta charset="utf-8">
+  <title>3D Map - Oxnehaga Project</title>
 
-<link rel="stylesheet" href="https://js.arcgis.com/4.29/esri/themes/light/main.css" />
-<script src="https://js.arcgis.com/4.29/"></script>
+  <link rel="stylesheet" href="https://js.arcgis.com/4.29/esri/themes/light/main.css">
 
-<style>
-html, body {
-  margin: 0;
-  padding: 0;
-  height: 100%;
-  width: 100%;
-  font-family: Arial, sans-serif;
-}
+  <style>
+    html, body {
+      height: 100%;
+      width: 100%;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      font-family: Arial, sans-serif;
+    }
 
-#container {
-  display: flex;
-  height: 100vh;   /* IMPORTANT FIX */
-}
+    #sidePanel {
+      width: 250px;
+      background-color: #1f2a38;
+      color: white;
+      padding: 20px;
+      box-sizing: border-box;
+      z-index: 2;
+    }
 
-/* LEFT PANEL */
-#sidePanel {
-  width: 260px;
-  background: #f2f2f2;
-  padding: 15px;
-  box-shadow: 2px 0 6px rgba(0,0,0,0.2);
-  overflow-y: auto;
-}
+    #viewDiv {
+      flex: 1;
+      height: 100vh; /* ⬅️ CRITICAL FIX: This makes the map visible */
+      position: relative;
+      background-color: #f0f0f0; /* Light grey fallback */
+    }
 
-/* MAP */
-#viewDiv {
-  flex: 1;
-  height: 100%;   /* IMPORTANT FIX */
-}
-
-/* RIGHT INFO PANEL */
-#infoPanel {
-  position: absolute;
-  top: 20px;
-  right: 20px;
-  width: 260px;
-  max-height: 400px;
-  overflow-y: auto;
-  background: white;
-  padding: 12px;
-  border-radius: 6px;
-  box-shadow: 0 0 10px rgba(0,0,0,0.3);
-  z-index: 99;
-  font-size: 13px;
-}
-
-#layerListDiv {
-  margin-top: 15px;
-}
-</style>
+    #infoPanel {
+      position: absolute;
+      top: 20px;
+      right: 20px;
+      width: 280px;
+      max-height: 400px;
+      overflow-y: auto;
+      background: white;
+      padding: 15px;
+      border-radius: 10px;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+      font-size: 14px;
+      z-index: 10;
+    }
+  </style>
 </head>
 
 <body>
 
-<div id="container">
+<div id="sidePanel">
+  <h2>GIS Web Urban</h2>
+  <p>Layer controls coming soon!</p>
+</div>
 
-  <div id="sidePanel">
-    <h2>GIS Web Urban</h2>
-    <p>Layer control:</p>
-    <div id="layerListDiv"></div>
+<div id="viewDiv">
+  <div id="infoPanel">
+    <h3>Feature Info</h3>
+    <div id="infoContent">Click on a building...</div>
   </div>
-
-  <div id="viewDiv"></div>
-
 </div>
 
-<div id="infoPanel">
-  <b>Feature Info</b>
-  <div id="infoContent">Click on a feature...</div>
-</div>
+<script src="https://js.arcgis.com/4.29/"></script>
 
 <script>
 require([
   "esri/Map",
-  "esri/views/MapView",
-  "esri/layers/GeoJSONLayer",
-  "esri/widgets/LayerList"
-], function(Map, MapView, GeoJSONLayer, LayerList) {
+  "esri/views/SceneView",
+  "esri/layers/GeoJSONLayer"
+], function(Map, SceneView, GeoJSONLayer) {
+
+  // 1. This "Renderer" tells the map to turn flat shapes into 3D blocks
+  const buildingRenderer = {
+    type: "simple",
+    symbol: {
+      type: "polygon-3d",
+      symbolLayers: [{
+        type: "extrude",
+        size: 10, // Height in meters
+        material: { color: "#4A90E2" },
+        edges: { type: "solid", color: "white", size: 1 }
+      }]
+    }
+  };
 
   const map = new Map({
-    basemap: "streets"
+    basemap: "topo-vector",
+    ground: "world-elevation"
   });
 
-  const view = new MapView({
+  const view = new SceneView({
     container: "viewDiv",
     map: map,
-    center: [14.16, 57.78],
-    zoom: 14
-  });
-
-  /* ===== LAYERS ===== */
-
-  const trainLayer = new GeoJSONLayer({
-    url: "./train.geojson",
-    title: "Train"
-  });
-
-  const mainBuilding = new GeoJSONLayer({
-    url: "./Main_byggnad.geojson",
-    title: "Main Building"
-  });
-
-  const areaLayer = new GeoJSONLayer({
-    url: "./Oxnehaga-Area.geojson",
-    title: "Oxnehaga Area",
-    renderer: {
-      type: "simple",
-      symbol: {
-        type: "simple-fill",
-        color: [0,0,0,0],  // transparent fill
-        outline: {
-          color: "red",
-          width: 2
-        }
-      }
+    camera: {
+      position: {
+        longitude: 14.2626,
+        latitude: 57.7766,
+        z: 1500 // Altitude in meters
+      },
+      tilt: 45
     }
   });
 
+  // 2. Loading your files (Names must match your GitHub files exactly!)
+  const mainLayer = new GeoJSONLayer({
+    url: "Main_byggnad.geojson",
+    renderer: buildingRenderer,
+    title: "Main Buildings"
+  });
+
   const schoolLayer = new GeoJSONLayer({
-    url: "./Oxnehaga_school.geojson",
-    title: "School"
+    url: "Oxnehaga_school.geojson",
+    renderer: buildingRenderer,
+    title: "Schools"
   });
 
-  const routeLayer = new GeoJSONLayer({
-    url: "./Oxnehaga_school_route.geojson",
-    title: "School Route"
+  const areaLayer = new GeoJSONLayer({
+    url: "Oxnehaga-Area.geojson",
+    title: "Area Boundary"
   });
 
-  map.addMany([
-    trainLayer,
-    mainBuilding,
-    areaLayer,
-    schoolLayer,
-    routeLayer
-  ]);
+  map.addMany([areaLayer, mainLayer, schoolLayer]);
 
-  /* ===== LAYER LIST IN SIDE PANEL ===== */
-
-  new LayerList({
-    view: view,
-    container: "layerListDiv"
-  });
-
-  /* ===== CLICK ATTRIBUTES ===== */
-
+  // 3. Click logic to fill your Info Panel
   view.on("click", function(event) {
     view.hitTest(event).then(function(response) {
-
-      const result = response.results.find(r => r.graphic.layer.type === "geojson");
-
-      if (result) {
-        const attributes = result.graphic.attributes;
-        let content = "";
-
-        for (let key in attributes) {
-          content += "<b>" + key + "</b>: " + attributes[key] + "<br>";
+      if (response.results.length > 0 && response.results[0].graphic) {
+        var props = response.results[0].graphic.attributes;
+        var content = "<ul>";
+        for (var key in props) {
+          content += "<li><b>" + key + ":</b> " + props[key] + "</li>";
         }
-
+        content += "</ul>";
         document.getElementById("infoContent").innerHTML = content;
+      } else {
+        document.getElementById("infoContent").innerHTML = "No feature selected.";
       }
     });
   });
