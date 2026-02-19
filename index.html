@@ -2,7 +2,7 @@
 <html>
 <head>
   <meta charset="utf-8">
-  <title>3D Map with Grouped Walking Layer</title>
+  <title>3D Map with Grouped Toggle</title>
 
   <link rel="stylesheet" href="https://js.arcgis.com/4.24/esri/themes/light/main.css">
 
@@ -17,19 +17,19 @@
     }
 
     #sidePanel {
-      width: 260px;
+      width: 250px;
       background-color: #1f2a38;
       color: white;
       padding: 20px;
       box-sizing: border-box;
     }
 
-    .layer-control {
-      margin-bottom: 20px;
-    }
-
     #viewDiv {
       flex: 1;
+    }
+
+    .layer-control {
+      margin-bottom: 25px;
     }
 
     .switch {
@@ -85,11 +85,11 @@
 <div id="sidePanel">
   <h2>Layer Controls</h2>
 
-  <!-- Walking Analysis GROUP -->
+  <!-- GROUPED LAYER -->
   <div class="layer-control">
-    <label>Walking Time to Train Station</label><br>
+    <label>Main Building + Oxnehaga Area</label><br>
     <label class="switch">
-      <input type="checkbox" id="walkingToggle" checked>
+      <input type="checkbox" id="groupToggle" checked>
       <span class="slider"></span>
     </label>
   </div>
@@ -125,29 +125,45 @@ require([
     }
   });
 
-  // 🟣 Walking analysis layers (3 separate files)
-
-  var schoolLayer = new GeoJSONLayer({
-    url: "./Oxnehaga_school.geojson"
+  // 🔵 MAIN BYGGNAD
+  var mainLayer = new GeoJSONLayer({
+    url: "./Main_byggnad.geojson",
+    renderer: {
+      type: "simple",
+      symbol: {
+        type: "simple-fill",
+        color: [0, 120, 255, 0.4],
+        outline: {
+          color: "#0078ff",
+          width: 2
+        }
+      }
+    }
   });
 
-  var routeLayer = new GeoJSONLayer({
-    url: "./Oxnehaga_school_route.geojson"
+  // 🟢 OXNEHAGA AREA (Contour Only)
+  var areaLayer = new GeoJSONLayer({
+    url: "./Oxnehaga-Area.geojson",
+    renderer: {
+      type: "simple",
+      symbol: {
+        type: "simple-fill",
+        color: [0, 0, 0, 0],
+        outline: {
+          color: "#00c853",
+          width: 3
+        }
+      }
+    }
   });
 
-  var stationLayer = new GeoJSONLayer({
-    url: "./Huskvarna_train_station.geojson"
-  });
+  map.addMany([mainLayer, areaLayer]);
 
-  map.addMany([schoolLayer, routeLayer, stationLayer]);
-
-  // 🔘 ONE toggle controls ALL THREE
-  document.getElementById("walkingToggle").addEventListener("change", function() {
-    var isVisible = this.checked;
-
-    schoolLayer.visible = isVisible;
-    routeLayer.visible = isVisible;
-    stationLayer.visible = isVisible;
+  // 🔘 ONE TOGGLE CONTROLS BOTH
+  document.getElementById("groupToggle").addEventListener("change", function() {
+    var visible = this.checked;
+    mainLayer.visible = visible;
+    areaLayer.visible = visible;
   });
 
 });
@@ -155,5 +171,3 @@ require([
 
 </body>
 </html>
-
-
