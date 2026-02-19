@@ -2,7 +2,7 @@
 <html>
 <head>
   <meta charset="utf-8">
-  <title>3D Map with Grouped Layers</title>
+  <title>3D Map with Custom Info Panel</title>
 
   <link rel="stylesheet" href="https://js.arcgis.com/4.24/esri/themes/light/main.css">
 
@@ -26,55 +26,31 @@
 
     #viewDiv {
       flex: 1;
+      position: relative;
+    }
+
+    /* 🔵 FIXED INFO PANEL */
+    #infoPanel {
+      position: absolute;
+      top: 20px;
+      right: 20px;
+      width: 280px;
+      max-height: 400px;
+      overflow-y: auto;
+      background: white;
+      padding: 15px;
+      border-radius: 10px;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+      font-size: 14px;
+      z-index: 10;
+    }
+
+    #infoPanel h3 {
+      margin-top: 0;
     }
 
     .layer-control {
       margin-bottom: 25px;
-    }
-
-    .switch {
-      position: relative;
-      display: inline-block;
-      width: 50px;
-      height: 26px;
-    }
-
-    .switch input {
-      opacity: 0;
-      width: 0;
-      height: 0;
-    }
-
-    .slider {
-      position: absolute;
-      cursor: pointer;
-      top: 0;
-      left: 0;
-      right: 0;
-      bottom: 0;
-      background-color: #ccc;
-      transition: .4s;
-      border-radius: 26px;
-    }
-
-    .slider:before {
-      position: absolute;
-      content: "";
-      height: 18px;
-      width: 18px;
-      left: 4px;
-      bottom: 4px;
-      background-color: white;
-      transition: .4s;
-      border-radius: 50%;
-    }
-
-    input:checked + .slider {
-      background-color: #00c853;
-    }
-
-    input:checked + .slider:before {
-      transform: translateX(24px);
     }
 
   </style>
@@ -84,28 +60,14 @@
 
 <div id="sidePanel">
   <h2>Layer Controls</h2>
-
-  <!-- WALKING ANALYSIS -->
-  <div class="layer-control">
-    <label>Walking Time Analysis</label><br>
-    <label class="switch">
-      <input type="checkbox" id="walkingToggle" checked>
-      <span class="slider"></span>
-    </label>
-  </div>
-
-  <!-- BUILDING + AREA -->
-  <div class="layer-control">
-    <label>Main Building + Oxnehaga Area</label><br>
-    <label class="switch">
-      <input type="checkbox" id="groupToggle" checked>
-      <span class="slider"></span>
-    </label>
-  </div>
-
 </div>
 
-<div id="viewDiv"></div>
+<div id="viewDiv">
+  <div id="infoPanel">
+    <h3>Feature Info</h3>
+    <div id="infoContent">Click on a feature...</div>
+  </div>
+</div>
 
 <script src="https://js.arcgis.com/4.24/"></script>
 
@@ -124,7 +86,7 @@ require([
   var view = new SceneView({
     container: "viewDiv",
     map: map,
-    qualityProfile: "high",
+    popupEnabled: false, // 🚫 disable default popup
     camera: {
       position: {
         longitude: 14.2626,
@@ -135,35 +97,7 @@ require([
     }
   });
 
-  // Log if SceneView fails
-  view.when(function() {
-    console.log("SceneView loaded correctly");
-  }).catch(function(error) {
-    console.error("SceneView failed:", error);
-  });
-
-  // ===============================
-  // WALKING ANALYSIS (3 FILES)
-  // ===============================
-
-  var schoolLayer = new GeoJSONLayer({
-    url: "./Oxnehaga_school.geojson"
-  });
-
-  var routeLayer = new GeoJSONLayer({
-    url: "./Oxnehaga_school_route.geojson"
-  });
-
-  var stationLayer = new GeoJSONLayer({
-    url: "./Huskvarna_train_station.geojson"
-  });
-
-  map.addMany([schoolLayer, routeLayer, stationLayer]);
-
-  // ===============================
-  // MAIN BUILDING + AREA
-  // ===============================
-
+  // Example layers
   var mainLayer = new GeoJSONLayer({
     url: "./Main_byggnad.geojson"
   });
@@ -172,23 +106,36 @@ require([
     url: "./Oxnehaga-Area.geojson"
   });
 
-  map.addMany([mainLayer, areaLayer]);
-
-  // ===============================
-  // TOGGLES
-  // ===============================
-
-  document.getElementById("walkingToggle").addEventListener("change", function() {
-    var visible = this.checked;
-    schoolLayer.visible = visible;
-    routeLayer.visible = visible;
-    stationLayer.visible = visible;
+  var schoolLayer = new GeoJSONLayer({
+    url: "./Oxnehaga_school.geojson"
   });
 
-  document.getElementById("groupToggle").addEventListener("change", function() {
-    var visible = this.checked;
-    mainLayer.visible = visible;
-    areaLayer.visible = visible;
+  map.addMany([mainLayer, areaLayer, schoolLayer]);
+
+  // 🟢 CLICK EVENT
+  view.on("click", function(event) {
+
+    view.hitTest(event).then(function(response) {
+
+      if (response.results.length > 0) {
+
+        var graphic = response.results[0].graphic;
+        var attributes = graphic.attributes;
+
+        var content = "";
+
+        for (var key in attributes) {
+          content += "<b>" + key + ":</b> " + attributes[key] + "<br>";
+        }
+
+        document.getElementById("infoContent").innerHTML = content;
+
+      } else {
+        document.getElementById("infoContent").innerHTML = "No feature selected.";
+      }
+
+    });
+
   });
 
 });
