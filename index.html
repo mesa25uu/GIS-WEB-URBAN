@@ -1,145 +1,121 @@
-<!DOCTYPE html> 
-<html>
+<!DOCTYPE html>
+<html lang="en">
 <head>
-  <meta charset="utf-8">
-  <title>3D Map with Custom Info Panel</title>
+<meta charset="utf-8" />
+<meta name="viewport" content="initial-scale=1,maximum-scale=1,user-scalable=no" />
+<title>3D Map with Info Panel</title>
 
-  <link rel="stylesheet" href="https://js.arcgis.com/4.24/esri/themes/light/main.css">
+<link rel="stylesheet" href="https://js.arcgis.com/4.29/esri/themes/light/main.css" />
+<script src="https://js.arcgis.com/4.29/"></script>
 
-  <style>
-    html, body {
-      height: 100%;
-      width: 100%;
-      margin: 0;
-      padding: 0;
-      display: flex;
-      font-family: Arial, sans-serif;
-    }
+<style>
+  html, body, #viewDiv {
+    padding: 0;
+    margin: 0;
+    height: 100%;
+    width: 100%;
+  }
 
-    #sidePanel {
-      width: 250px;
-      background-color: #1f2a38;
-      color: white;
-      padding: 20px;
-      box-sizing: border-box;
-    }
+  /* Small Layer Toggle */
+  .esri-layer-list {
+    font-size: 12px !important;
+  }
 
-    #viewDiv {
-      flex: 1;
-      position: relative;
-    }
+  /* Fixed Info Panel */
+  #infoPanel {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    width: 300px;
+    max-height: 400px;
+    overflow-y: auto;
+    background: white;
+    padding: 15px;
+    border-radius: 8px;
+    box-shadow: 0 0 15px rgba(0,0,0,0.3);
+    z-index: 99;
+    font-size: 14px;
+  }
 
-    /* 🔵 FIXED INFO PANEL */
-    #infoPanel {
-      position: absolute;
-      top: 20px;
-      right: 20px;
-      width: 280px;
-      max-height: 400px;
-      overflow-y: auto;
-      background: white;
-      padding: 15px;
-      border-radius: 10px;
-      box-shadow: 0 4px 15px rgba(0,0,0,0.3);
-      font-size: 14px;
-      z-index: 10;
-    }
-
-    #infoPanel h3 {
-      margin-top: 0;
-    }
-
-    .layer-control {
-      margin-bottom: 25px;
-    }
-
-  </style>
+  #infoPanel h3 {
+    margin-top: 0;
+  }
+</style>
 </head>
 
 <body>
-
-<div id="sidePanel">
-  <h2>Layer Controls</h2>
+<div id="viewDiv"></div>
+<div id="infoPanel">
+  <h3>Feature Info</h3>
+  <div id="infoContent">Click on a feature...</div>
 </div>
-
-<div id="viewDiv">
-  <div id="infoPanel">
-    <h3>Feature Info</h3>
-    <div id="infoContent">Click on a feature...</div>
-  </div>
-</div>
-
-<script src="https://js.arcgis.com/4.24/"></script>
 
 <script>
 require([
   "esri/Map",
   "esri/views/SceneView",
-  "esri/layers/GeoJSONLayer"
-], function(Map, SceneView, GeoJSONLayer) {
+  "esri/layers/GeoJSONLayer",
+  "esri/widgets/LayerList"
+], function(Map, SceneView, GeoJSONLayer, LayerList) {
 
-  var map = new Map({
-    basemap: "topo-vector",
+  const map = new Map({
+    basemap: "streets",
     ground: "world-elevation"
   });
 
-  var view = new SceneView({
+  const view = new SceneView({
     container: "viewDiv",
     map: map,
-    popupEnabled: false, // 🚫 disable default popup
     camera: {
       position: {
-        longitude: 14.2626,
-        latitude: 57.7766,
-        z: 2000
+        x: 15,
+        y: 57,
+        z: 200000
       },
-      tilt: 60
+      tilt: 45
     }
   });
 
-  // Example layers
-  var mainLayer = new GeoJSONLayer({
-    url: "./Main_byggnad.geojson"
+  // ✅ GeoJSON Layer
+  const trainLayer = new GeoJSONLayer({
+    url: "train.geojson"
   });
 
-  var areaLayer = new GeoJSONLayer({
-    url: "./Oxnehaga-Area.geojson"
+  map.add(trainLayer);
+
+  // ✅ Small Layer List
+  const layerList = new LayerList({
+    view: view
   });
 
-  var schoolLayer = new GeoJSONLayer({
-    url: "./Oxnehaga_school.geojson"
-  });
+  view.ui.add(layerList, "top-left");
 
-  map.addMany([mainLayer, areaLayer, schoolLayer]);
-
-  // 🟢 CLICK EVENT
+  // ✅ Click Event to Show Attributes
   view.on("click", function(event) {
 
     view.hitTest(event).then(function(response) {
 
       if (response.results.length > 0) {
 
-        var graphic = response.results[0].graphic;
-        var attributes = graphic.attributes;
+        const result = response.results.find(r => r.graphic.layer === trainLayer);
 
-        var content = "";
+        if (result) {
+          const attributes = result.graphic.attributes;
 
-        for (var key in attributes) {
-          content += "<b>" + key + ":</b> " + attributes[key] + "<br>";
+          let content = "";
+
+          for (let key in attributes) {
+            content += "<b>" + key + "</b>: " + attributes[key] + "<br>";
+          }
+
+          document.getElementById("infoContent").innerHTML = content;
         }
-
-        document.getElementById("infoContent").innerHTML = content;
-
-      } else {
-        document.getElementById("infoContent").innerHTML = "No feature selected.";
       }
-
     });
 
   });
 
 });
 </script>
-
 </body>
 </html>
