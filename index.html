@@ -24,7 +24,7 @@
 
 <body>
 
-<h1>3D Map – Öxnehaga + Train Layer</h1>
+<h1>3D Map – Train Location</h1>
 <div id="viewDiv"></div>
 
 <!-- ArcGIS JavaScript -->
@@ -38,24 +38,27 @@ require([
   "esri/layers/GeoJSONLayer"
 ], function(Map, SceneView, SceneLayer, GeoJSONLayer) {
 
+  // 1️⃣ Create map
   var map = new Map({
     basemap: "topo-vector",
     ground: "world-elevation"
   });
 
+  // 2️⃣ Create 3D view and zoom to YOUR coordinate
   var view = new SceneView({
     container: "viewDiv",
     map: map,
     camera: {
       position: {
-        longitude: 14.2740,
-        latitude: 57.2544,
-        z: 2000
+        longitude: 14.262597210092274,  // 👈 longitude first
+        latitude: 57.77663047365129,   // 👈 latitude second
+        z: 1500                       // height (lower = closer)
       },
-      tilt: 70
+      tilt: 75
     }
   });
 
+  // 3️⃣ Add 3D buildings
   var buildings = new SceneLayer({
     portalItem: {
       id: "ca0470dbbddb4db28bad74ed39949e25"
@@ -64,15 +67,9 @@ require([
 
   map.add(buildings);
 
-  // TRAIN LAYER
+  // 4️⃣ Add train layer
   var trainLayer = new GeoJSONLayer({
     url: "./train.geojson"
-  });
-
-  trainLayer.when(function() {
-    console.log("Train layer loaded!");
-  }).catch(function(error) {
-    console.error("Train layer failed to load:", error);
   });
 
   map.add(trainLayer);
