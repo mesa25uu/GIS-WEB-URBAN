@@ -6,7 +6,7 @@
   <link rel="stylesheet" href="https://js.arcgis.com/4.29/esri/themes/light/main.css">
 
   <style>
-    html, body { height: 100%; width: 100%; margin: 0; padding: 0; display: flex; font-family: sans-serif; }
+    html, body { height: 100%; width: 100%; margin: 0; padding: 0; display: flex; font-family: 'Segoe UI', sans-serif; }
     
     #sidePanel {
       width: 280px;
@@ -14,44 +14,68 @@
       color: white;
       padding: 20px;
       z-index: 5;
-      overflow-y: auto;
+      box-shadow: 2px 0 10px rgba(0,0,0,0.5);
     }
 
-    #viewDiv { flex: 1; height: 100vh; position: relative; }
+    #viewDiv { flex: 1; height: 100vh; position: relative; background-color: #eee; }
 
-    /* Toggle Styles */
+    /* Right Corner Info Panel */
+    #infoPanel {
+      position: absolute; 
+      top: 20px; 
+      right: 20px; 
+      width: 300px;
+      max-height: 60vh;
+      overflow-y: auto;
+      background: white; 
+      padding: 0; 
+      border-radius: 8px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.4); 
+      z-index: 10;
+      border: 1px solid #ccc;
+    }
+
+    .info-header {
+      background: #4A90E2;
+      color: white;
+      padding: 10px 15px;
+      border-radius: 8px 8px 0 0;
+      font-weight: bold;
+    }
+
+    #infoContent { padding: 15px; font-size: 13px; color: #333; line-height: 1.6; }
+
+    /* Toggle Styling */
     .layer-item {
-      margin-bottom: 15px;
+      margin-bottom: 10px;
       display: flex;
       align-items: center;
-      background: rgba(255,255,255,0.1);
-      padding: 10px;
-      border-radius: 5px;
+      background: rgba(255,255,255,0.05);
+      padding: 8px;
+      border-radius: 4px;
+      cursor: pointer;
     }
-    .layer-item input { margin-right: 12px; transform: scale(1.2); cursor: pointer; }
+    .layer-item:hover { background: rgba(255,255,255,0.1); }
+    .layer-item input { margin-right: 10px; cursor: pointer; }
     
-    #infoPanel {
-      position: absolute; top: 20px; right: 20px; width: 240px;
-      background: white; padding: 15px; border-radius: 8px;
-      box-shadow: 0 4px 10px rgba(0,0,0,0.3); z-index: 10; font-size: 13px;
-    }
-    hr { border: 0; border-top: 1px solid #444; margin: 15px 0; }
+    table { width: 100%; border-collapse: collapse; }
+    td { padding: 4px 0; border-bottom: 1px solid #eee; }
+    .attr-key { font-weight: bold; color: #666; width: 40%; }
   </style>
 </head>
 
 <body>
 
   <div id="sidePanel">
-    <h2>Urban Layers</h2>
-    <hr>
-    <div id="controls">
-      </div>
+    <h2>Map Layers</h2>
+    <hr style="opacity: 0.2; margin: 20px 0;">
+    <div id="controls"></div>
   </div>
 
   <div id="viewDiv">
     <div id="infoPanel">
-      <strong>Feature Info</strong>
-      <div id="infoContent">Click a feature...</div>
+      <div class="info-header">Feature Details</div>
+      <div id="infoContent">Click on any map object to see its full information.</div>
     </div>
   </div>
 
@@ -72,12 +96,11 @@
       const view = new SceneView({
         container: "viewDiv",
         map: map,
-        camera: { position: [14.2626, 57.7766, 2000], tilt: 45 }
+        camera: { position: [14.2626, 57.7766, 2000], tilt: 45 },
+        popupEnabled: false // We disable the default popup to use our custom panel
       });
 
-      // --- 1. RENDERERS ---
-      
-      // 3D Extrusion for Buildings
+      // 1. RENDERERS
       const buildingRenderer = {
         type: "simple",
         symbol: {
@@ -91,68 +114,76 @@
         }
       };
 
-      // Outline only for the Area (No fill)
       const areaRenderer = {
         type: "simple",
         symbol: {
           type: "simple-fill", 
-          color: [0, 0, 0, 0], // Transparent fill
-          outline: { color: "#ffcc00", width: 2 }
+          color: [0, 0, 0, 0], // Hollow
+          outline: { color: "#FFD700", width: 3 } // Gold Contour
         }
       };
 
-      // --- 2. LAYER CREATION ---
-
+      // 2. LAYERS
       const mainBuilding = new GeoJSONLayer({ url: "Main_byggnad.geojson", renderer: buildingRenderer, title: "Main Buildings" });
       const areaBoundary = new GeoJSONLayer({ url: "Oxnehaga-Area.geojson", renderer: areaRenderer, title: "Area Contour" });
-      
-      // Grouping layers for the single toggle
       const schoolLayer = new GeoJSONLayer({ url: "Oxnehaga_school.geojson", renderer: buildingRenderer });
       const routeLayer = new GeoJSONLayer({ url: "Oxnehaga_school_route.geojson" });
       const stationLayer = new GeoJSONLayer({ url: "Huskvarna_train_station.geojson" });
 
       map.addMany([areaBoundary, mainBuilding, schoolLayer, routeLayer, stationLayer]);
 
-      // --- 3. TOGGLE LOGIC ---
-
+      // 3. GENERATE SIDEBAR TOGGLES
       const controls = document.getElementById("controls");
 
-      // Function to create a standard toggle
-      function createToggle(name, layers) {
-        const div = document.createElement("div");
-        div.className = "layer-item";
+      function addLayerToggle(label, layersGroup) {
+        const item = document.createElement("div");
+        item.className = "layer-item";
         
-        const checkbox = document.createElement("input");
-        checkbox.type = "checkbox";
-        checkbox.checked = true;
-        
-        checkbox.onclick = (e) => {
-          layers.forEach(lyr => lyr.visible = e.target.checked);
+        const cb = document.createElement("input");
+        cb.type = "checkbox";
+        cb.checked = true;
+        cb.onchange = (e) => {
+          layersGroup.forEach(l => l.visible = e.target.checked);
         };
 
-        const label = document.createElement("label");
-        label.innerHTML = name;
+        const text = document.createElement("span");
+        text.innerText = label;
 
-        div.appendChild(checkbox);
-        div.appendChild(label);
-        controls.appendChild(div);
+        item.appendChild(cb);
+        item.appendChild(text);
+        controls.appendChild(item);
       }
 
-      // Create individual toggles
-      createToggle("Area Contour", [areaBoundary]);
-      createToggle("Main Buildings", [mainBuilding]);
+      addLayerToggle("Area Contour", [areaBoundary]);
+      addLayerToggle("Main Buildings", [mainBuilding]);
+      addLayerToggle("Schools & Transport", [schoolLayer, routeLayer, stationLayer]);
 
-      // Create the GROUPED toggle for Schools and Train Station
-      createToggle("School & Train Info", [schoolLayer, routeLayer, stationLayer]);
-
-      // Click event for info panel
+      // 4. THE CLICK EVENT (Shows all attributes)
       view.on("click", (event) => {
         view.hitTest(event).then((response) => {
-          if (response.results.length > 0 && response.results[0].graphic) {
-            const attr = response.results[0].graphic.attributes;
-            let content = "<ul>";
-            for (let key in attr) { content += `<li><b>${key}:</b> ${attr[key]}</li>`; }
-            document.getElementById("infoContent").innerHTML = content + "</ul>";
+          // Check if we hit a graphic
+          const results = response.results.filter(r => r.graphic);
+          
+          if (results.length > 0) {
+            const graphic = results[0].graphic;
+            const attributes = graphic.attributes;
+
+            // Build a table of all information
+            let tableHTML = "<table>";
+            for (let key in attributes) {
+              // Only show keys that actually have data
+              if (attributes[key] !== null && attributes[key] !== undefined) {
+                tableHTML += `<tr>
+                                <td class="attr-key">${key}</td>
+                                <td>${attributes[key]}</td>
+                              </tr>`;
+              }
+            }
+            tableHTML += "</table>";
+
+            document.getElementById("infoContent").innerHTML = tableHTML;
+          } else {
+            document.getElementById("infoContent").innerHTML = "No feature selected.";
           }
         });
       });
