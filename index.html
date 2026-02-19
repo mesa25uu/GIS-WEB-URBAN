@@ -1,44 +1,14 @@
-<!DOCTYPE html>
-<html>
-<head>
-  <meta charset="utf-8">
-  <title>Urban Map - Oxnehaga</title>
-  <link rel="stylesheet" href="https://js.arcgis.com/4.29/esri/themes/light/main.css">
-  <style>
-    html, body { height: 100%; width: 100%; margin: 0; padding: 0; display: flex; font-family: 'Segoe UI', sans-serif; }
-    #sidePanel { width: 280px; background-color: #1f2a38; color: white; padding: 20px; z-index: 5; box-shadow: 2px 0 10px rgba(0,0,0,0.5); }
-    #viewDiv { flex: 1; height: 100vh; position: relative; background-color: #eee; }
-    #infoPanel { position: absolute; top: 20px; right: 20px; width: 300px; max-height: 60vh; overflow-y: auto; background: white; border-radius: 8px; box-shadow: 0 4px 20px rgba(0,0,0,0.4); z-index: 10; border: 1px solid #ccc; }
-    .info-header { background: #4A90E2; color: white; padding: 10px 15px; border-radius: 8px 8px 0 0; font-weight: bold; }
-    #infoContent { padding: 15px; font-size: 13px; color: #333; line-height: 1.6; }
-    .layer-item { margin-bottom: 10px; display: flex; align-items: center; background: rgba(255,255,255,0.05); padding: 8px; border-radius: 4px; cursor: pointer; }
-    .layer-item input { margin-right: 10px; cursor: pointer; }
-    table { width: 100%; border-collapse: collapse; }
-    td { padding: 4px 0; border-bottom: 1px solid #eee; }
-    .attr-key { font-weight: bold; color: #666; width: 40%; }
-  </style>
-</head>
-<body>
+require([
+      "esri/Map", 
+      "esri/views/SceneView", 
+      "esri/layers/GeoJSONLayer",
+      "esri/widgets/Home"
+    ], function(Map, SceneView, GeoJSONLayer, Home) {
 
-  <div id="sidePanel">
-    <h2>Map Layers</h2>
-    <hr style="opacity: 0.2; margin: 20px 0;">
-    <div id="controls"></div>
-  </div>
-
-  <div id="viewDiv">
-    <div id="infoPanel">
-      <div class="info-header">Feature Details</div>
-      <div id="infoContent">Click on any map object to see its full information.</div>
-    </div>
-  </div>
-
-  <script src="https://js.arcgis.com/4.29/"></script>
-
-  <script>
-    require(["esri/Map", "esri/views/SceneView", "esri/layers/GeoJSONLayer"], function(Map, SceneView, GeoJSONLayer) {
-
-      const map = new Map({ basemap: "topo-vector", ground: "world-elevation" });
+      const map = new Map({ 
+        basemap: "topo-vector", 
+        ground: "world-elevation" 
+      });
 
       const view = new SceneView({
         container: "viewDiv",
@@ -47,34 +17,71 @@
           position: {
             longitude: 14.262240914858294,
             latitude: 57.77815821622224,
-            z: 5000 // Zoom height
+            z: 5000 
           },
-          tilt: 0,   // Look straight down
-          heading: 0 // Point North
+          tilt: 0,
+          heading: 0
         },
         popupEnabled: false
       });
+
+      const homeBtn = new Home({ view: view });
+      view.ui.add(homeBtn, "top-left");
 
       // Renderers
       const buildingRenderer = {
         type: "simple",
         symbol: {
           type: "polygon-3d",
-          symbolLayers: [{ type: "extrude", size: 12, material: { color: "#4A90E2" }, edges: { type: "solid", color: "white", size: 1 } }]
+          symbolLayers: [{ 
+            type: "extrude", 
+            size: 12, 
+            material: { color: "#4A90E2" }, 
+            edges: { type: "solid", color: "white", size: 1 } 
+          }]
         }
       };
 
       const areaRenderer = {
         type: "simple",
-        symbol: { type: "simple-fill", color: [0, 0, 0, 0], outline: { color: "#FFD700", width: 3 } }
+        symbol: { 
+          type: "simple-fill", 
+          color: [0, 0, 0, 0], 
+          outline: { color: "#FFD700", width: 3 } 
+        }
       };
 
-      // Layers
-      const mainBuilding = new GeoJSONLayer({ url: "Main_byggnad.geojson", renderer: buildingRenderer, title: "Main Buildings" });
-      const areaBoundary = new GeoJSONLayer({ url: "Oxnehaga-Area.geojson", renderer: areaRenderer, title: "Area Contour" });
-      const schoolLayer = new GeoJSONLayer({ url: "Oxnehaga_school.geojson", renderer: buildingRenderer });
-      const routeLayer = new GeoJSONLayer({ url: "Oxnehaga_school_route.geojson" });
-      const stationLayer = new GeoJSONLayer({ url: "Huskvarna_train_station.geojson" });
+      // --- LAYERS WITH outFields: ["*"] ADDED ---
+      // This ensures every attribute is downloaded and available for the click event
+      const areaBoundary = new GeoJSONLayer({ 
+        url: "Oxnehaga-Area.geojson", 
+        renderer: areaRenderer, 
+        title: "Area Contour",
+        outFields: ["*"] // ⬅️ This grabs all data columns
+      });
+
+      const mainBuilding = new GeoJSONLayer({ 
+        url: "Main_byggnad.geojson", 
+        renderer: buildingRenderer, 
+        title: "Main Buildings",
+        outFields: ["*"] 
+      });
+
+      const schoolLayer = new GeoJSONLayer({ 
+        url: "Oxnehaga_school.geojson", 
+        renderer: buildingRenderer,
+        outFields: ["*"]
+      });
+
+      const routeLayer = new GeoJSONLayer({ 
+        url: "Oxnehaga_school_route.geojson",
+        outFields: ["*"]
+      });
+
+      const stationLayer = new GeoJSONLayer({ 
+        url: "Huskvarna_train_station.geojson",
+        outFields: ["*"]
+      });
 
       map.addMany([areaBoundary, mainBuilding, schoolLayer, routeLayer, stationLayer]);
 
@@ -93,29 +100,34 @@
         controls.appendChild(item);
       }
 
-      addLayerToggle("Area Contour", [areaBoundary]);
+      addLayerToggle("Area Boundary", [areaBoundary]);
       addLayerToggle("Main Buildings", [mainBuilding]);
       addLayerToggle("Schools & Transport", [schoolLayer, routeLayer, stationLayer]);
 
-      // Info Panel Click Event
+      // Info Panel Logic
       view.on("click", (event) => {
+        // The hitTest checks which building/line you actually clicked
         view.hitTest(event).then((response) => {
           const results = response.results.filter(r => r.graphic);
+          
           if (results.length > 0) {
-            const attr = results[0].graphic.attributes;
+            const graphic = results[0].graphic;
+            const attr = graphic.attributes;
+
+            // We build the table by looking at every piece of data in 'attr'
             let tableHTML = "<table>";
             for (let key in attr) {
-              if (attr[key] !== null) {
+              // We skip attributes that are empty or internal IDs like 'OBJECTID' if you want
+              if (attr[key] !== null && attr[key] !== undefined && attr[key] !== "") {
                 tableHTML += `<tr><td class="attr-key">${key}</td><td>${attr[key]}</td></tr>`;
               }
             }
-            document.getElementById("infoContent").innerHTML = tableHTML + "</table>";
+            tableHTML += "</table>";
+            
+            document.getElementById("infoContent").innerHTML = tableHTML;
+          } else {
+            document.getElementById("infoContent").innerHTML = "No feature selected.";
           }
         });
       });
     });
-  </script>
-</body>
-</html>
-
-
