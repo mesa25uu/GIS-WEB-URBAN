@@ -6,50 +6,46 @@
   <link rel="stylesheet" href="https://js.arcgis.com/4.29/esri/themes/light/main.css">
 
   <style>
-    html, body {
-      height: 100%;
-      width: 100%;
-      margin: 0;
-      padding: 0;
-      display: flex;
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    }
-
+    html, body { height: 100%; width: 100%; margin: 0; padding: 0; display: flex; font-family: sans-serif; }
+    
     #sidePanel {
-      width: 250px;
+      width: 280px;
       background-color: #1f2a38;
       color: white;
       padding: 20px;
       z-index: 5;
+      overflow-y: auto;
     }
 
-    /* 🟢 THE FIX: Explicit height ensures the map doesn't collapse to 0px */
-    #viewDiv {
-      flex: 1;
-      height: 100vh; 
-      position: relative;
-    }
+    #viewDiv { flex: 1; height: 100vh; position: relative; }
 
+    /* Toggle Styles */
+    .layer-item {
+      margin-bottom: 15px;
+      display: flex;
+      align-items: center;
+      background: rgba(255,255,255,0.1);
+      padding: 10px;
+      border-radius: 5px;
+    }
+    .layer-item input { margin-right: 12px; transform: scale(1.2); cursor: pointer; }
+    
     #infoPanel {
-      position: absolute;
-      top: 20px;
-      right: 20px;
-      width: 260px;
-      background: rgba(255, 255, 255, 0.95);
-      padding: 15px;
-      border-radius: 8px;
-      box-shadow: 0 4px 10px rgba(0,0,0,0.3);
-      z-index: 10;
+      position: absolute; top: 20px; right: 20px; width: 240px;
+      background: white; padding: 15px; border-radius: 8px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.3); z-index: 10; font-size: 13px;
     }
+    hr { border: 0; border-top: 1px solid #444; margin: 15px 0; }
   </style>
 </head>
 
 <body>
 
   <div id="sidePanel">
-    <h2>GIS Web Urban</h2>
+    <h2>Urban Layers</h2>
     <hr>
-    <p>Click building features to see details in the info panel.</p>
+    <div id="controls">
+      </div>
   </div>
 
   <div id="viewDiv">
@@ -68,20 +64,6 @@
       "esri/layers/GeoJSONLayer"
     ], function(Map, SceneView, GeoJSONLayer) {
 
-      // This makes your flat 2D data pop out in 3D
-      const buildingRenderer = {
-        type: "simple",
-        symbol: {
-          type: "polygon-3d",
-          symbolLayers: [{
-            type: "extrude",
-            size: 12, // Height in meters
-            material: { color: "#4A90E2" },
-            edges: { type: "solid", color: "white", size: 1 }
-          }]
-        }
-      };
-
       const map = new Map({
         basemap: "topo-vector",
         ground: "world-elevation"
@@ -90,35 +72,87 @@
       const view = new SceneView({
         container: "viewDiv",
         map: map,
-        camera: {
-          position: [14.2626, 57.7766, 1500], // Longitude, Latitude, Elevation
-          tilt: 50
-        }
+        camera: { position: [14.2626, 57.7766, 2000], tilt: 45 }
       });
 
-      // 🔵 ADDING ALL YOUR LAYERS FROM GITHUB
-      const layers = [
-        new GeoJSONLayer({ url: "Main_byggnad.geojson", renderer: buildingRenderer, title: "Main Building" }),
-        new GeoJSONLayer({ url: "Oxnehaga_school.geojson", renderer: buildingRenderer, title: "School" }),
-        new GeoJSONLayer({ url: "Oxnehaga-Area.geojson", title: "Area" }),
-        new GeoJSONLayer({ url: "Huskvarna_train_station.geojson", title: "Train Station" }),
-        new GeoJSONLayer({ url: "Oxnehaga_school_route.geojson", title: "School Route" }),
-        new GeoJSONLayer({ url: "train.geojson", title: "Train Lines" })
-      ];
+      // --- 1. RENDERERS ---
+      
+      // 3D Extrusion for Buildings
+      const buildingRenderer = {
+        type: "simple",
+        symbol: {
+          type: "polygon-3d",
+          symbolLayers: [{
+            type: "extrude",
+            size: 12,
+            material: { color: "#4A90E2" },
+            edges: { type: "solid", color: "white", size: 1 }
+          }]
+        }
+      };
 
-      map.addMany(layers);
+      // Outline only for the Area (No fill)
+      const areaRenderer = {
+        type: "simple",
+        symbol: {
+          type: "simple-fill", 
+          color: [0, 0, 0, 0], // Transparent fill
+          outline: { color: "#ffcc00", width: 2 }
+        }
+      };
 
-      // 🖱️ CLICK INTERACTION
-      view.on("click", function(event) {
-        view.hitTest(event).then(function(response) {
+      // --- 2. LAYER CREATION ---
+
+      const mainBuilding = new GeoJSONLayer({ url: "Main_byggnad.geojson", renderer: buildingRenderer, title: "Main Buildings" });
+      const areaBoundary = new GeoJSONLayer({ url: "Oxnehaga-Area.geojson", renderer: areaRenderer, title: "Area Contour" });
+      
+      // Grouping layers for the single toggle
+      const schoolLayer = new GeoJSONLayer({ url: "Oxnehaga_school.geojson", renderer: buildingRenderer });
+      const routeLayer = new GeoJSONLayer({ url: "Oxnehaga_school_route.geojson" });
+      const stationLayer = new GeoJSONLayer({ url: "Huskvarna_train_station.geojson" });
+
+      map.addMany([areaBoundary, mainBuilding, schoolLayer, routeLayer, stationLayer]);
+
+      // --- 3. TOGGLE LOGIC ---
+
+      const controls = document.getElementById("controls");
+
+      // Function to create a standard toggle
+      function createToggle(name, layers) {
+        const div = document.createElement("div");
+        div.className = "layer-item";
+        
+        const checkbox = document.createElement("input");
+        checkbox.type = "checkbox";
+        checkbox.checked = true;
+        
+        checkbox.onclick = (e) => {
+          layers.forEach(lyr => lyr.visible = e.target.checked);
+        };
+
+        const label = document.createElement("label");
+        label.innerHTML = name;
+
+        div.appendChild(checkbox);
+        div.appendChild(label);
+        controls.appendChild(div);
+      }
+
+      // Create individual toggles
+      createToggle("Area Contour", [areaBoundary]);
+      createToggle("Main Buildings", [mainBuilding]);
+
+      // Create the GROUPED toggle for Schools and Train Station
+      createToggle("School & Train Info", [schoolLayer, routeLayer, stationLayer]);
+
+      // Click event for info panel
+      view.on("click", (event) => {
+        view.hitTest(event).then((response) => {
           if (response.results.length > 0 && response.results[0].graphic) {
             const attr = response.results[0].graphic.attributes;
-            let html = "<ul>";
-            for (let key in attr) {
-              html += `<li><b>${key}:</b> ${attr[key]}</li>`;
-            }
-            html += "</ul>";
-            document.getElementById("infoContent").innerHTML = html;
+            let content = "<ul>";
+            for (let key in attr) { content += `<li><b>${key}:</b> ${attr[key]}</li>`; }
+            document.getElementById("infoContent").innerHTML = content + "</ul>";
           }
         });
       });
