@@ -55,9 +55,7 @@
       "esri/Map", "esri/views/SceneView", "esri/layers/GeoJSONLayer", "esri/widgets/Home"
     ], function(Map, SceneView, GeoJSONLayer, Home) {
 
-      // The ID of the building we want to highlight in Red
       const targetID = "86068c15-afde-4284-90fc-ad8735b25416";
-      
       const map = new Map({ basemap: "topo-vector", ground: "world-elevation" });
 
       const view = new SceneView({
@@ -73,30 +71,19 @@
 
       view.ui.add(new Home({ view: view }), "top-left");
 
-      // --- 1. THE RED BUILDING RENDERER ---
-      // This tells the map: if 'OBJEKTIDENTITET' is your targetID, make it Red.
+      // Renderers
       const buildingRenderer = {
         type: "unique-value",
-        field: "OBJEKTIDENTITET", // This matches the field name in your screenshot
+        field: "OBJEKTIDENTITET",
         defaultSymbol: {
           type: "polygon-3d",
-          symbolLayers: [{ 
-            type: "extrude", 
-            size: 15, 
-            material: { color: "#4A90E2" }, 
-            edges: { type: "solid", color: "white", size: 1 } 
-          }]
+          symbolLayers: [{ type: "extrude", size: 15, material: { color: "#4A90E2" }, edges: { type: "solid", color: "white", size: 1 } }]
         },
         uniqueValueInfos: [{
           value: targetID,
           symbol: {
             type: "polygon-3d",
-            symbolLayers: [{ 
-              type: "extrude", 
-              size: 20, // Making the red building slightly taller so it pops out
-              material: { color: "#ff0000" }, 
-              edges: { type: "solid", color: "white", size: 2 } 
-            }]
+            symbolLayers: [{ type: "extrude", size: 20, material: { color: "#ff0000" }, edges: { type: "solid", color: "white", size: 2 } }]
           }
         }]
       };
@@ -106,17 +93,35 @@
         symbol: { type: "simple-fill", color: [0, 0, 0, 0], outline: { color: "#FFD700", width: 3 } }
       };
 
-      // --- 2. LAYERS ---
+      // 🟢 New Renderer for Distance from Center (Purple outline)
+      const distanceRenderer = {
+        type: "simple",
+        symbol: {
+          type: "simple-fill",
+          color: [138, 43, 226, 0.1], // Transparent purple fill
+          outline: { color: "#8A2BE2", width: 2, style: "dash" }
+        }
+      };
+
+      // Layers
       const areaLayer = new GeoJSONLayer({ url: "Oxnehaga-Area.geojson", renderer: areaRenderer, outFields: ["*"] });
       const mainByggnad = new GeoJSONLayer({ url: "Main_byggnad.geojson", renderer: buildingRenderer, outFields: ["*"] });
       const schoolLayer = new GeoJSONLayer({ url: "Oxnehaga_school.geojson", renderer: buildingRenderer, outFields: ["*"] });
       const schoolRoute = new GeoJSONLayer({ url: "Oxnehaga_school_route.geojson", outFields: ["*"] });
       const trainStation = new GeoJSONLayer({ url: "Huskvarna_train_station.geojson", outFields: ["*"] });
       const trainLines = new GeoJSONLayer({ url: "train.geojson", outFields: ["*"] });
+      
+      // 🟢 Add the new Distans layer
+      const distansLayer = new GeoJSONLayer({ 
+        url: "Distans_from_centrum.geojson", 
+        renderer: distanceRenderer, 
+        outFields: ["*"],
+        title: "Distance from Center"
+      });
 
-      map.addMany([areaLayer, mainByggnad, schoolLayer, schoolRoute, trainStation, trainLines]);
+      map.addMany([areaLayer, mainByggnad, schoolLayer, schoolRoute, trainStation, trainLines, distansLayer]);
 
-      // --- 3. TOGGLES ---
+      // Side Toggles
       const controls = document.getElementById("controls");
       function addToggle(label, layers) {
         const div = document.createElement("div");
@@ -133,8 +138,9 @@
       addToggle("Main Buildings", [mainByggnad]);
       addToggle("Schools & Route", [schoolLayer, schoolRoute]);
       addToggle("Train Info", [trainStation, trainLines]);
+      addToggle("Distance From Center", [distansLayer]); // 🟢 Toggle for the new layer
 
-      // --- 4. CLICK EVENT ---
+      // Click event
       view.on("click", (event) => {
         view.hitTest(event).then((response) => {
           const results = response.results.filter(r => r.graphic);
@@ -151,7 +157,6 @@
             }
             tableHTML += "</table>";
 
-            // Check if this object contains the target ID
             const isSpecialObject = Object.values(attr).includes(targetID);
 
             if (isSpecialObject) {
