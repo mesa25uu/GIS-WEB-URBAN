@@ -124,14 +124,22 @@ require([
   var view = new SceneView({
     container: "viewDiv",
     map: map,
+    qualityProfile: "high",
     camera: {
       position: {
-        longitude: 14.262597210092274,
-        latitude: 57.77663047365129,
-        z: 1200
+        longitude: 14.2626,
+        latitude: 57.7766,
+        z: 2000
       },
-      tilt: 75
+      tilt: 60
     }
+  });
+
+  // Log if SceneView fails
+  view.when(function() {
+    console.log("SceneView loaded correctly");
+  }).catch(function(error) {
+    console.error("SceneView failed:", error);
   });
 
   // ===============================
@@ -157,33 +165,11 @@ require([
   // ===============================
 
   var mainLayer = new GeoJSONLayer({
-    url: "./Main_byggnad.geojson",
-    renderer: {
-      type: "simple",
-      symbol: {
-        type: "simple-fill",
-        color: [0, 120, 255, 0.4],
-        outline: {
-          color: "#0078ff",
-          width: 2
-        }
-      }
-    }
+    url: "./Main_byggnad.geojson"
   });
 
   var areaLayer = new GeoJSONLayer({
-    url: "./Oxnehaga-Area.geojson",
-    renderer: {
-      type: "simple",
-      symbol: {
-        type: "simple-fill",
-        color: [0, 0, 0, 0],
-        outline: {
-          color: "#00c853",
-          width: 3
-        }
-      }
-    }
+    url: "./Oxnehaga-Area.geojson"
   });
 
   map.addMany([mainLayer, areaLayer]);
