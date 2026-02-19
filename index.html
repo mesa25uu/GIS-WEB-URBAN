@@ -4,66 +4,20 @@
   <meta charset="utf-8">
   <title>Urban Map - Oxnehaga</title>
   <link rel="stylesheet" href="https://js.arcgis.com/4.29/esri/themes/light/main.css">
-
   <style>
     html, body { height: 100%; width: 100%; margin: 0; padding: 0; display: flex; font-family: 'Segoe UI', sans-serif; }
-    
-    #sidePanel {
-      width: 280px;
-      background-color: #1f2a38;
-      color: white;
-      padding: 20px;
-      z-index: 5;
-      box-shadow: 2px 0 10px rgba(0,0,0,0.5);
-    }
-
+    #sidePanel { width: 280px; background-color: #1f2a38; color: white; padding: 20px; z-index: 5; box-shadow: 2px 0 10px rgba(0,0,0,0.5); }
     #viewDiv { flex: 1; height: 100vh; position: relative; background-color: #eee; }
-
-    /* Right Corner Info Panel */
-    #infoPanel {
-      position: absolute; 
-      top: 20px; 
-      right: 20px; 
-      width: 300px;
-      max-height: 60vh;
-      overflow-y: auto;
-      background: white; 
-      padding: 0; 
-      border-radius: 8px;
-      box-shadow: 0 4px 20px rgba(0,0,0,0.4); 
-      z-index: 10;
-      border: 1px solid #ccc;
-    }
-
-    .info-header {
-      background: #4A90E2;
-      color: white;
-      padding: 10px 15px;
-      border-radius: 8px 8px 0 0;
-      font-weight: bold;
-    }
-
+    #infoPanel { position: absolute; top: 20px; right: 20px; width: 300px; max-height: 60vh; overflow-y: auto; background: white; border-radius: 8px; box-shadow: 0 4px 20px rgba(0,0,0,0.4); z-index: 10; border: 1px solid #ccc; }
+    .info-header { background: #4A90E2; color: white; padding: 10px 15px; border-radius: 8px 8px 0 0; font-weight: bold; }
     #infoContent { padding: 15px; font-size: 13px; color: #333; line-height: 1.6; }
-
-    /* Toggle Styling */
-    .layer-item {
-      margin-bottom: 10px;
-      display: flex;
-      align-items: center;
-      background: rgba(255,255,255,0.05);
-      padding: 8px;
-      border-radius: 4px;
-      cursor: pointer;
-    }
-    .layer-item:hover { background: rgba(255,255,255,0.1); }
+    .layer-item { margin-bottom: 10px; display: flex; align-items: center; background: rgba(255,255,255,0.05); padding: 8px; border-radius: 4px; cursor: pointer; }
     .layer-item input { margin-right: 10px; cursor: pointer; }
-    
     table { width: 100%; border-collapse: collapse; }
     td { padding: 4px 0; border-bottom: 1px solid #eee; }
     .attr-key { font-weight: bold; color: #666; width: 40%; }
   </style>
 </head>
-
 <body>
 
   <div id="sidePanel">
@@ -82,48 +36,40 @@
   <script src="https://js.arcgis.com/4.29/"></script>
 
   <script>
-    require([
-      "esri/Map",
-      "esri/views/SceneView",
-      "esri/layers/GeoJSONLayer"
-    ], function(Map, SceneView, GeoJSONLayer) {
+    require(["esri/Map", "esri/views/SceneView", "esri/layers/GeoJSONLayer"], function(Map, SceneView, GeoJSONLayer) {
 
-      const map = new Map({
-        basemap: "topo-vector",
-        ground: "world-elevation"
-      });
+      const map = new Map({ basemap: "topo-vector", ground: "world-elevation" });
 
       const view = new SceneView({
         container: "viewDiv",
         map: map,
-        camera: { position: [14.2626, 57.7766, 2000], tilt: 45 },
-        popupEnabled: false // We disable the default popup to use our custom panel
+        camera: {
+          position: {
+            longitude: 14.262240914858294,
+            latitude: 57.77815821622224,
+            z: 1000 // Zoom height
+          },
+          tilt: 0,   // Look straight down
+          heading: 0 // Point North
+        },
+        popupEnabled: false
       });
 
-      // 1. RENDERERS
+      // Renderers
       const buildingRenderer = {
         type: "simple",
         symbol: {
           type: "polygon-3d",
-          symbolLayers: [{
-            type: "extrude",
-            size: 12,
-            material: { color: "#4A90E2" },
-            edges: { type: "solid", color: "white", size: 1 }
-          }]
+          symbolLayers: [{ type: "extrude", size: 12, material: { color: "#4A90E2" }, edges: { type: "solid", color: "white", size: 1 } }]
         }
       };
 
       const areaRenderer = {
         type: "simple",
-        symbol: {
-          type: "simple-fill", 
-          color: [0, 0, 0, 0], // Hollow
-          outline: { color: "#FFD700", width: 3 } // Gold Contour
-        }
+        symbol: { type: "simple-fill", color: [0, 0, 0, 0], outline: { color: "#FFD700", width: 3 } }
       };
 
-      // 2. LAYERS
+      // Layers
       const mainBuilding = new GeoJSONLayer({ url: "Main_byggnad.geojson", renderer: buildingRenderer, title: "Main Buildings" });
       const areaBoundary = new GeoJSONLayer({ url: "Oxnehaga-Area.geojson", renderer: areaRenderer, title: "Area Contour" });
       const schoolLayer = new GeoJSONLayer({ url: "Oxnehaga_school.geojson", renderer: buildingRenderer });
@@ -132,24 +78,17 @@
 
       map.addMany([areaBoundary, mainBuilding, schoolLayer, routeLayer, stationLayer]);
 
-      // 3. GENERATE SIDEBAR TOGGLES
+      // Side Toggles
       const controls = document.getElementById("controls");
-
       function addLayerToggle(label, layersGroup) {
         const item = document.createElement("div");
         item.className = "layer-item";
-        
         const cb = document.createElement("input");
-        cb.type = "checkbox";
-        cb.checked = true;
-        cb.onchange = (e) => {
-          layersGroup.forEach(l => l.visible = e.target.checked);
-        };
-
+        cb.type = "checkbox"; cb.checked = true;
+        cb.onchange = (e) => { layersGroup.forEach(l => l.visible = e.target.checked); };
+        item.appendChild(cb);
         const text = document.createElement("span");
         text.innerText = label;
-
-        item.appendChild(cb);
         item.appendChild(text);
         controls.appendChild(item);
       }
@@ -158,32 +97,19 @@
       addLayerToggle("Main Buildings", [mainBuilding]);
       addLayerToggle("Schools & Transport", [schoolLayer, routeLayer, stationLayer]);
 
-      // 4. THE CLICK EVENT (Shows all attributes)
+      // Info Panel Click Event
       view.on("click", (event) => {
         view.hitTest(event).then((response) => {
-          // Check if we hit a graphic
           const results = response.results.filter(r => r.graphic);
-          
           if (results.length > 0) {
-            const graphic = results[0].graphic;
-            const attributes = graphic.attributes;
-
-            // Build a table of all information
+            const attr = results[0].graphic.attributes;
             let tableHTML = "<table>";
-            for (let key in attributes) {
-              // Only show keys that actually have data
-              if (attributes[key] !== null && attributes[key] !== undefined) {
-                tableHTML += `<tr>
-                                <td class="attr-key">${key}</td>
-                                <td>${attributes[key]}</td>
-                              </tr>`;
+            for (let key in attr) {
+              if (attr[key] !== null) {
+                tableHTML += `<tr><td class="attr-key">${key}</td><td>${attr[key]}</td></tr>`;
               }
             }
-            tableHTML += "</table>";
-
-            document.getElementById("infoContent").innerHTML = tableHTML;
-          } else {
-            document.getElementById("infoContent").innerHTML = "No feature selected.";
+            document.getElementById("infoContent").innerHTML = tableHTML + "</table>";
           }
         });
       });
