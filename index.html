@@ -55,7 +55,9 @@
       "esri/Map", "esri/views/SceneView", "esri/layers/GeoJSONLayer", "esri/widgets/Home"
     ], function(Map, SceneView, GeoJSONLayer, Home) {
 
+      // The ID of the building we want to highlight in Red
       const targetID = "86068c15-afde-4284-90fc-ad8735b25416";
+      
       const map = new Map({ basemap: "topo-vector", ground: "world-elevation" });
 
       const view = new SceneView({
@@ -71,20 +73,30 @@
 
       view.ui.add(new Home({ view: view }), "top-left");
 
-      // --- 1. SPECIAL RENDERER (Red for specific ID, Blue for others) ---
-      // We check the field that contains your ID. Adjust "uuid" if your field name is different.
+      // --- 1. THE RED BUILDING RENDERER ---
+      // This tells the map: if 'OBJEKTIDENTITET' is your targetID, make it Red.
       const buildingRenderer = {
         type: "unique-value",
-        field: "uuid", // ⬅️ Change this to the exact column name in your GeoJSON that holds the ID
+        field: "OBJEKTIDENTITET", // This matches the field name in your screenshot
         defaultSymbol: {
           type: "polygon-3d",
-          symbolLayers: [{ type: "extrude", size: 15, material: { color: "#4A90E2" }, edges: { type: "solid", color: "white", size: 1 } }]
+          symbolLayers: [{ 
+            type: "extrude", 
+            size: 15, 
+            material: { color: "#4A90E2" }, 
+            edges: { type: "solid", color: "white", size: 1 } 
+          }]
         },
         uniqueValueInfos: [{
           value: targetID,
           symbol: {
             type: "polygon-3d",
-            symbolLayers: [{ type: "extrude", size: 25, material: { color: "#ff0000" }, edges: { type: "solid", color: "white", size: 2 } }]
+            symbolLayers: [{ 
+              type: "extrude", 
+              size: 20, // Making the red building slightly taller so it pops out
+              material: { color: "#ff0000" }, 
+              edges: { type: "solid", color: "white", size: 2 } 
+            }]
           }
         }]
       };
@@ -94,7 +106,7 @@
         symbol: { type: "simple-fill", color: [0, 0, 0, 0], outline: { color: "#FFD700", width: 3 } }
       };
 
-      // Layers
+      // --- 2. LAYERS ---
       const areaLayer = new GeoJSONLayer({ url: "Oxnehaga-Area.geojson", renderer: areaRenderer, outFields: ["*"] });
       const mainByggnad = new GeoJSONLayer({ url: "Main_byggnad.geojson", renderer: buildingRenderer, outFields: ["*"] });
       const schoolLayer = new GeoJSONLayer({ url: "Oxnehaga_school.geojson", renderer: buildingRenderer, outFields: ["*"] });
@@ -104,7 +116,7 @@
 
       map.addMany([areaLayer, mainByggnad, schoolLayer, schoolRoute, trainStation, trainLines]);
 
-      // Toggles
+      // --- 3. TOGGLES ---
       const controls = document.getElementById("controls");
       function addToggle(label, layers) {
         const div = document.createElement("div");
@@ -122,7 +134,7 @@
       addToggle("Schools & Route", [schoolLayer, schoolRoute]);
       addToggle("Train Info", [trainStation, trainLines]);
 
-      // Click event
+      // --- 4. CLICK EVENT ---
       view.on("click", (event) => {
         view.hitTest(event).then((response) => {
           const results = response.results.filter(r => r.graphic);
