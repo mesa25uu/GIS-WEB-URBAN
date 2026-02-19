@@ -38,13 +38,11 @@ require([
   "esri/layers/GeoJSONLayer"
 ], function(Map, SceneView, SceneLayer, GeoJSONLayer) {
 
-  // 1️⃣ Create the map
   var map = new Map({
     basemap: "topo-vector",
     ground: "world-elevation"
   });
 
-  // 2️⃣ Create 3D view
   var view = new SceneView({
     container: "viewDiv",
     map: map,
@@ -58,7 +56,6 @@ require([
     }
   });
 
-  // 3️⃣ Add 3D buildings
   var buildings = new SceneLayer({
     portalItem: {
       id: "ca0470dbbddb4db28bad74ed39949e25"
@@ -67,9 +64,15 @@ require([
 
   map.add(buildings);
 
-  // 4️⃣ Add your train.geojson file
+  // TRAIN LAYER
   var trainLayer = new GeoJSONLayer({
-    url: "train.geojson"
+    url: "./train.geojson"
+  });
+
+  trainLayer.when(function() {
+    console.log("Train layer loaded!");
+  }).catch(function(error) {
+    console.error("Train layer failed to load:", error);
   });
 
   map.add(trainLayer);
