@@ -10,51 +10,44 @@
 
 <style>
 html, body {
-  padding: 0;
   margin: 0;
+  padding: 0;
   height: 100%;
-  width: 100%;
   display: flex;
   font-family: Arial, sans-serif;
 }
 
-/* LEFT SIDE PANEL */
+/* LEFT PANEL */
 #sidePanel {
-  width: 250px;
-  background: #f4f4f4;
+  width: 260px;
+  background: #f2f2f2;
   padding: 15px;
-  box-shadow: 2px 0 5px rgba(0,0,0,0.2);
+  box-shadow: 2px 0 6px rgba(0,0,0,0.2);
   overflow-y: auto;
 }
 
-/* MAP */
 #viewDiv {
   flex: 1;
 }
 
-/* FIXED INFO PANEL RIGHT */
+/* Right fixed info panel */
 #infoPanel {
   position: absolute;
   top: 20px;
   right: 20px;
-  width: 280px;
+  width: 260px;
   max-height: 400px;
   overflow-y: auto;
   background: white;
-  padding: 15px;
-  border-radius: 8px;
-  box-shadow: 0 0 15px rgba(0,0,0,0.3);
+  padding: 12px;
+  border-radius: 6px;
+  box-shadow: 0 0 10px rgba(0,0,0,0.3);
   z-index: 99;
-  font-size: 14px;
+  font-size: 13px;
 }
 
-#infoPanel h3 {
-  margin-top: 0;
-}
-
-/* Smaller LayerList */
-.esri-layer-list {
-  font-size: 12px !important;
+#layerListDiv {
+  margin-top: 15px;
 }
 </style>
 </head>
@@ -63,13 +56,14 @@ html, body {
 
 <div id="sidePanel">
   <h2>GIS Web Urban</h2>
-  <p>Select layers from the toggler.</p>
+  <p>Layer control:</p>
+  <div id="layerListDiv"></div>
 </div>
 
 <div id="viewDiv"></div>
 
 <div id="infoPanel">
-  <h3>Feature Info</h3>
+  <b>Feature Info</b>
   <div id="infoContent">Click on a feature...</div>
 </div>
 
@@ -93,13 +87,14 @@ require([
       position: {
         x: 14.16,
         y: 57.78,
-        z: 5000
+        z: 4000
       },
       tilt: 60
     }
   });
 
-  // LOAD ALL YOUR LAYERS
+  /* ===== LAYERS ===== */
+
   const trainLayer = new GeoJSONLayer({
     url: "./train.geojson",
     title: "Train"
@@ -110,9 +105,21 @@ require([
     title: "Main Building"
   });
 
+  /* OXNEHAGA AREA - CONTOUR ONLY */
   const areaLayer = new GeoJSONLayer({
     url: "./Oxnehaga-Area.geojson",
-    title: "Oxnehaga Area"
+    title: "Oxnehaga Area",
+    renderer: {
+      type: "simple",
+      symbol: {
+        type: "simple-fill",
+        color: [0, 0, 0, 0],   // transparent fill
+        outline: {
+          color: "red",
+          width: 2
+        }
+      }
+    }
   });
 
   const schoolLayer = new GeoJSONLayer({
@@ -133,14 +140,15 @@ require([
     routeLayer
   ]);
 
-  // LAYER TOGGLER
+  /* ===== LAYER LIST INSIDE SIDE PANEL ===== */
+
   const layerList = new LayerList({
-    view: view
+    view: view,
+    container: "layerListDiv"
   });
 
-  view.ui.add(layerList, "top-left");
+  /* ===== CLICK ATTRIBUTES ===== */
 
-  // CLICK EVENT
   view.on("click", function(event) {
     view.hitTest(event).then(function(response) {
 
