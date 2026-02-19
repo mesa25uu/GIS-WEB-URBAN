@@ -2,7 +2,7 @@
 <html>
 <head>
   <meta charset="utf-8">
-  <title>3D Map with Train Toggle</title>
+  <title>3D Map with Multiple Layer Toggles</title>
 
   <!-- ArcGIS CSS -->
   <link rel="stylesheet" href="https://js.arcgis.com/4.24/esri/themes/light/main.css">
@@ -17,9 +17,9 @@
       font-family: Arial, sans-serif;
     }
 
-    /* LEFT SIDE PANEL */
+    /* SIDE PANEL */
     #sidePanel {
-      width: 250px;
+      width: 260px;
       background-color: #1f2a38;
       color: white;
       padding: 20px;
@@ -30,12 +30,16 @@
       margin-top: 0;
     }
 
-    /* MAP AREA */
+    .layer-control {
+      margin-bottom: 20px;
+    }
+
+    /* MAP */
     #viewDiv {
       flex: 1;
     }
 
-    /* Toggle switch styling */
+    /* Toggle switch */
     .switch {
       position: relative;
       display: inline-block;
@@ -86,14 +90,34 @@
 
 <body>
 
-<!-- LEFT PANEL -->
+<!-- SIDE PANEL -->
 <div id="sidePanel">
-  <h2>Train Layer Control</h2>
-  <label class="switch">
-    <input type="checkbox" id="trainToggle" checked>
-    <span class="slider"></span>
-  </label>
-  <p>Toggle Train Layer</p>
+  <h2>Layer Controls</h2>
+
+  <div class="layer-control">
+    <label>Train Layer</label><br>
+    <label class="switch">
+      <input type="checkbox" id="trainToggle" checked>
+      <span class="slider"></span>
+    </label>
+  </div>
+
+  <div class="layer-control">
+    <label>Main Byggnad</label><br>
+    <label class="switch">
+      <input type="checkbox" id="mainToggle" checked>
+      <span class="slider"></span>
+    </label>
+  </div>
+
+  <div class="layer-control">
+    <label>Oxnehaga Area</label><br>
+    <label class="switch">
+      <input type="checkbox" id="areaToggle" checked>
+      <span class="slider"></span>
+    </label>
+  </div>
+
 </div>
 
 <!-- MAP -->
@@ -136,26 +160,65 @@ require([
   });
   map.add(buildings);
 
-  // 🎨 Train layer with custom RED color
+  // 🔴 TRAIN (Line)
   var trainLayer = new GeoJSONLayer({
     url: "./train.geojson",
     renderer: {
       type: "simple",
       symbol: {
         type: "simple-line",
-        color: "#ff3d00",  // 🔴 Train color
+        color: "#ff3d00",
         width: 4
       }
     }
   });
-
   map.add(trainLayer);
 
-  // 🎛 Toggle functionality
-  var toggle = document.getElementById("trainToggle");
+  // 🔵 MAIN BYGGNAD (Polygon or line auto-handled)
+  var mainLayer = new GeoJSONLayer({
+    url: "./Main_byggnad.geojson",
+    renderer: {
+      type: "simple",
+      symbol: {
+        type: "simple-fill",
+        color: [0, 120, 255, 0.4],
+        outline: {
+          color: "#0078ff",
+          width: 2
+        }
+      }
+    }
+  });
+  map.add(mainLayer);
 
-  toggle.addEventListener("change", function() {
-    trainLayer.visible = toggle.checked;
+  // 🟢 OXNEHAGA AREA (Polygon)
+  var areaLayer = new GeoJSONLayer({
+    url: "./Oxnehaga-Area.geojson",
+    renderer: {
+      type: "simple",
+      symbol: {
+        type: "simple-fill",
+        color: [0, 200, 83, 0.3],
+        outline: {
+          color: "#00c853",
+          width: 2
+        }
+      }
+    }
+  });
+  map.add(areaLayer);
+
+  // TOGGLES
+  document.getElementById("trainToggle").addEventListener("change", function() {
+    trainLayer.visible = this.checked;
+  });
+
+  document.getElementById("mainToggle").addEventListener("change", function() {
+    mainLayer.visible = this.checked;
+  });
+
+  document.getElementById("areaToggle").addEventListener("change", function() {
+    areaLayer.visible = this.checked;
   });
 
 });
