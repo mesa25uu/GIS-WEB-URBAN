@@ -177,10 +177,6 @@ const areaRenderer = {
     type:"simple-fill",
     color:[0,0,0,0],
     outline:{ color:"#00aa00", width:3 }
-
-
-
-
   }
 };
 
@@ -224,10 +220,31 @@ const distanceRenderer = {
   }
 };
 
+// NEW: BUS ICON RENDERER
+const busRenderer = {
+  type: "simple",
+  symbol: {
+    type: "picture-marker",
+    url: "https://static.arcgis.com/images/Symbols/Transportation/BusStation.png",
+    width: "22px",
+    height: "22px"
+  }
+};
+
+// NEW: SCHOOL ICON RENDERER
+const schoolIconRenderer = {
+  type: "simple",
+  symbol: {
+    type: "picture-marker",
+    url: "https://static.arcgis.com/images/Symbols/Education/School.png",
+    width: "22px",
+    height: "22px"
+  }
+};
+
 
 // ---------------- LAYERS ----------------
 
-// 3D BUILDINGS RESTORED
 const mainByggnad = new GeoJSONLayer({
   url:"Main_byggnad.geojson",
   elevationInfo:{ mode:"on-the-ground" },
@@ -275,8 +292,7 @@ const areaLayer = new GeoJSONLayer({
 
 const schoolLayer = new GeoJSONLayer({
   url:"Oxnehaga_school.geojson",
-
-
+  renderer: schoolIconRenderer, // Updated with icon
   outFields:["*"]
 });
 
@@ -318,11 +334,13 @@ const kindergartenLayer = new GeoJSONLayer({
 
 const schoolServiceLayer = new GeoJSONLayer({
   url:"Oxnehaga_school.geojson",
+  renderer: schoolIconRenderer, // Updated with icon
   outFields:["*"]
 });
 
 const busStopLayer = new GeoJSONLayer({
-  url:"Bus_stop.geojson",
+  url:"Bus_stop.geojson.geojson", // Updated filename as requested
+  renderer: busRenderer,          // Updated with icon
   outFields:["*"]
 });
 
@@ -405,19 +423,10 @@ addToggle("Area Boundary",[areaLayer],generalGroup);
 addToggle("Main Buildings",[mainByggnad],generalGroup);
 addToggle("Train Info",[trainStation,trainLines],generalGroup);
 
-
-
-
-
-
-
-
 const analysGroup=createDropdown("Analys");
 addToggle("Route from school to train station",[schoolLayer,schoolRoute],analysGroup);
 addToggle("Healthcare Walking Distance",[vardcentralWalking],analysGroup);
 addToggle("Distance From Center",[distansLayer],analysGroup);
-
-
 
 const servicesGroup=createDropdown("Services");
 addToggle("Kindergarten",[kindergartenLayer],servicesGroup);
@@ -437,7 +446,6 @@ view.on("click",function(event){
     );
 
     if(results.length>0){
-
       let attr=results[0].graphic.attributes;
       let tableHTML="<table>";
 
@@ -447,19 +455,10 @@ view.on("click",function(event){
             <td class="attr-key">${key}</td>
             <td>${attr[key]}</td>
           </tr>`;
-
-
-
-
-
-
       }
 
       tableHTML+="</table>";
       document.getElementById("infoContent").innerHTML=tableHTML;
-
-
-
 
     } else {
       document.getElementById("infoContent").innerHTML="No feature selected.";
