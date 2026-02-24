@@ -14,274 +14,232 @@
       overflow-y: auto; background: white; border-radius: 8px; 
       box-shadow: 0 4px 20px rgba(0,0,0,0.4); z-index: 10; border: 1px solid #ccc; 
     }
+
     .info-header { background: #4A90E2; color: white; padding: 10px 15px; border-radius: 8px 8px 0 0; font-weight: bold; }
     #infoContent { padding: 15px; font-size: 13px; color: #333; line-height: 1.6; }
-    
-    .layer-item { margin-bottom: 10px; display: flex; align-items: center; background: rgba(255,255,255,0.1); padding: 8px; border-radius: 4px; }
+
+    .layer-item { margin-bottom: 8px; display: flex; align-items: center; background: rgba(255,255,255,0.1); padding: 8px; border-radius: 4px; }
     .layer-item input { margin-right: 10px; cursor: pointer; }
-    
+
+    .dropdown { margin-bottom: 10px; }
+    .dropdown-header { cursor: pointer; font-weight: bold; padding: 8px; background: rgba(255,255,255,0.15); border-radius: 4px; }
+    .dropdown-content { display: none; margin-top: 5px; padding-left: 10px; }
+
     table { width: 100%; border-collapse: collapse; }
     td { padding: 6px 4px; border-bottom: 1px solid #eee; vertical-align: top; }
     .attr-key { font-weight: bold; color: #666; width: 40%; font-size: 11px; text-transform: uppercase; }
-    
-    .project-button {
-      display: inline-block; margin-top: 10px; padding: 10px 15px; 
-      background: #d9534f; color: white; text-decoration: none; 
-      border-radius: 4px; font-weight: bold; width: 100%; text-align: center;
-      box-sizing: border-box;
-    }
-    .project-button:hover { background: #c9302c; }
   </style>
 </head>
 <body>
 
-  <div id="sidePanel">
-    <h2 style="color: #4A90E2; margin: 0;">GIS Web Urban</h2>
-    <hr style="opacity: 0.2; margin: 15px 0;">
-    <div id="controls"></div>
+<div id="sidePanel">
+  <h2 style="color: #4A90E2; margin: 0;">GIS Web Urban</h2>
+  <hr style="opacity: 0.2; margin: 15px 0;">
+  <div id="controls"></div>
+</div>
+
+<div id="viewDiv">
+  <div id="infoPanel">
+    <div class="info-header">Feature Details</div>
+    <div id="infoContent">Click on a building or object to see its information.</div>
   </div>
+</div>
 
-  <div id="viewDiv">
-    <div id="infoPanel">
-      <div class="info-header">Feature Details</div>
-      <div id="infoContent">Click on a building or object to see its information.</div>
-    </div>
-  </div>
+<script src="https://js.arcgis.com/4.29/"></script>
 
-  <script src="https://js.arcgis.com/4.29/"></script>
+<script>
+require([
+  "esri/Map", 
+  "esri/views/SceneView", 
+  "esri/layers/GeoJSONLayer", 
+  "esri/widgets/Home"
+], function(Map, SceneView, GeoJSONLayer, Home) {
 
-  <script>
-    require([
-      "esri/Map", 
-      "esri/views/SceneView", 
-      "esri/layers/GeoJSONLayer", 
-      "esri/widgets/Home"
-    ], function(Map, SceneView, GeoJSONLayer, Home) {
+  const targetID = "86068c15-afde-4284-90fc-ad8735b25416";
 
-      const targetID = "86068c15-afde-4284-90fc-ad8735b25416";
+  const map = new Map({ 
+    basemap: "topo-vector", 
+    ground: "world-elevation" 
+  });
 
-      const map = new Map({ 
-        basemap: "topo-vector", 
-        ground: "world-elevation" 
-      });
+  const view = new SceneView({
+    container: "viewDiv",
+    map: map,
+    camera: {
+      position: { longitude: 14.2622409, latitude: 57.7781582, z: 5000 },
+      tilt: 0,
+      heading: 0
+    },
+    popupEnabled: false 
+  });
 
-      const view = new SceneView({
-        container: "viewDiv",
-        map: map,
-        camera: {
-          position: { longitude: 14.2622409, latitude: 57.7781582, z: 5000 },
-          tilt: 0,
-          heading: 0
-        },
-        popupEnabled: false 
-      });
+  view.ui.add(new Home({ view: view }), "top-left");
 
-      view.ui.add(new Home({ view: view }), "top-left");
+  // ---------------- RENDERERS ----------------
 
-      // -----------------------
-      // RENDERERS
-      // -----------------------
+  const buildingRenderer = {
+    type: "polygon-3d",
+    symbolLayers: [{
+      type: "extrude",
+      size: 15,
+      material: { color: "#4A90E2" },
+      edges: { type: "solid", color: "white", size: 1 }
+    }]
+  };
 
-      const buildingRenderer = {
-        type: "unique-value",
-        field: "OBJEKTIDENTITET",
-        defaultSymbol: {
-          type: "polygon-3d",
-          symbolLayers: [{
-            type: "extrude",
-            size: 15,
-            material: { color: "#4A90E2" },
-            edges: { type: "solid", color: "white", size: 1 }
-          }]
-        },
-        uniqueValueInfos: [{
-          value: targetID,
-          symbol: {
-            type: "polygon-3d",
-            symbolLayers: [{
-              type: "extrude",
-              size: 20,
-              material: { color: "#ff0000" },
-              edges: { type: "solid", color: "white", size: 2 }
-            }]
-          }
-        }]
-      };
+  const trainLineRenderer = {
+    type: "simple",
+    symbol: {
+      type: "simple-line",
+      color: "#ff0000",
+      width: 4
+    }
+  };
 
-      const areaRenderer = {
-        type: "simple",
-        symbol: {
-          type: "simple-fill",
-          color: [0, 0, 0, 0],
-          outline: { color: "#FFD700", width: 3 }
-        }
-      };
+  const schoolRouteRenderer = {
+    type: "simple",
+    symbol: {
+      type: "simple-line",
+      color: "#8A2BE2",  // Lilla (purple)
+      width: 5
+    }
+  };
 
-      const distanceRenderer = {
-        type: "unique-value",
-        field: "name",
-        defaultSymbol: {
-          type: "simple-fill",
-          color: [138, 43, 226, 0.1],
-          outline: { color: "#8A2BE2", width: 2, style: "dash" }
-        },
-        uniqueValueInfos: [{
-          value: "Location 1: 2 - 5",
-          symbol: {
-            type: "simple-fill",
-            color: [0, 122, 255, 0.2],
-            outline: { color: "#007AFF", width: 3, style: "solid" }
-          }
-        }]
-      };
+  const distanceRenderer = {
+    type: "simple",
+    symbol: {
+      type: "simple-fill",
+      color: [138, 43, 226, 0.1],
+      outline: { color: "#8A2BE2", width: 2 }
+    }
+  };
 
-      // 🔴 Train Line Renderer (Bigger + Red)
-      const trainLineRenderer = {
-        type: "simple",
-        symbol: {
-          type: "simple-line",
-          color: "#ff0000",
-          width: 4
-        }
-      };
+  const vardcentralRenderer = {
+    type: "simple",
+    symbol: {
+      type: "simple-fill",
+      color: [0, 150, 255, 0.4], // light blue 40%
+      outline: { color: "#0096FF", width: 2 }
+    }
+  };
 
-      // -----------------------
-      // LAYERS
-      // -----------------------
+  // ---------------- LAYERS ----------------
 
-      const areaLayer = new GeoJSONLayer({
-        url: "Oxnehaga-Area.geojson",
-        renderer: areaRenderer,
-        outFields: ["*"]
-      });
+  const areaLayer = new GeoJSONLayer({
+    url: "Oxnehaga-Area.geojson",
+    outFields: ["*"]
+  });
 
-      const mainByggnad = new GeoJSONLayer({
-        url: "Main_byggnad.geojson",
-        renderer: buildingRenderer,
-        outFields: ["*"]
-      });
+  const mainByggnad = new GeoJSONLayer({
+    url: "Main_byggnad.geojson",
+    renderer: buildingRenderer,
+    outFields: ["*"]
+  });
 
-      const schoolLayer = new GeoJSONLayer({
-        url: "Oxnehaga_school.geojson",
-        renderer: buildingRenderer,
-        outFields: ["*"]
-      });
+  const schoolLayer = new GeoJSONLayer({
+    url: "Oxnehaga_school.geojson",
+    renderer: buildingRenderer,
+    outFields: ["*"]
+  });
 
-      const schoolRoute = new GeoJSONLayer({
-        url: "Oxnehaga_school_route.geojson",
-        outFields: ["*"]
-      });
+  const schoolRoute = new GeoJSONLayer({
+    url: "Oxnehaga_school_route.geojson",
+    renderer: schoolRouteRenderer,
+    outFields: ["*"]
+  });
 
-      const trainStation = new GeoJSONLayer({
-        url: "Huskvarna_train_station.geojson",
-        outFields: ["*"]
-      });
+  const trainStation = new GeoJSONLayer({
+    url: "Huskvarna_train_station.geojson",
+    outFields: ["*"]
+  });
 
-      const trainLines = new GeoJSONLayer({
-        url: "train.geojson",
-        renderer: trainLineRenderer,
-        outFields: ["*"]
-      });
+  const trainLines = new GeoJSONLayer({
+    url: "train.geojson",
+    renderer: trainLineRenderer,
+    outFields: ["*"]
+  });
 
-      const distansLayer = new GeoJSONLayer({
-        url: "Distans_from_centrum.geojson",
-        renderer: distanceRenderer,
-        outFields: ["*"]
-      });
+  const distansLayer = new GeoJSONLayer({
+    url: "Distans_from_centrum.geojson",
+    renderer: distanceRenderer,
+    visible: false,   // OFF from start
+    outFields: ["*"]
+  });
 
-      const vardcentralWalking = new GeoJSONLayer({
-        url: "Vardcentral_walking_distance.geojson",
-        outFields: ["*"]
-      });
+  const vardcentralWalking = new GeoJSONLayer({
+    url: "Vardcentral_walking_distance.geojson",
+    renderer: vardcentralRenderer,
+    outFields: ["*"]
+  });
 
-      map.addMany([
-        areaLayer,
-        mainByggnad,
-        schoolLayer,
-        schoolRoute,
-        trainStation,
-        trainLines,
-        distansLayer,
-        vardcentralWalking
-      ]);
+  map.addMany([
+    areaLayer,
+    mainByggnad,
+    schoolLayer,
+    schoolRoute,
+    trainStation,
+    trainLines,
+    distansLayer,
+    vardcentralWalking
+  ]);
 
-      // -----------------------
-      // SIDEBAR TOGGLES
-      // -----------------------
+  // ---------------- SIDEBAR UI ----------------
 
-      const controls = document.getElementById("controls");
+  const controls = document.getElementById("controls");
 
-      function addToggle(label, layers) {
-        const div = document.createElement("div");
-        div.className = "layer-item";
+  function createDropdown(title) {
+    const container = document.createElement("div");
+    container.className = "dropdown";
 
-        const chk = document.createElement("input");
-        chk.type = "checkbox";
-        chk.checked = true;
-        chk.onchange = (e) => layers.forEach(lyr => lyr.visible = e.target.checked);
+    const header = document.createElement("div");
+    header.className = "dropdown-header";
+    header.innerText = title;
 
-        const span = document.createElement("span");
-        span.innerText = label;
+    const content = document.createElement("div");
+    content.className = "dropdown-content";
 
-        div.appendChild(chk);
-        div.appendChild(span);
-        controls.appendChild(div);
-      }
+    header.onclick = () => {
+      content.style.display = content.style.display === "block" ? "none" : "block";
+    };
 
-      addToggle("Area Boundary", [areaLayer]);
-      addToggle("Main Buildings", [mainByggnad]);
-      addToggle("Schools & Route", [schoolLayer, schoolRoute]);
-      addToggle("Train Info", [trainStation, trainLines]);
-      addToggle("Distance From Center", [distansLayer]);
-      addToggle("Healthcare Walking Distance", [vardcentralWalking]);
+    container.appendChild(header);
+    container.appendChild(content);
+    controls.appendChild(container);
 
-      // -----------------------
-      // CLICK EVENT
-      // -----------------------
+    return content;
+  }
 
-      view.on("click", (event) => {
-        view.hitTest(event).then((response) => {
+  function addToggle(label, layers, parent) {
+    const div = document.createElement("div");
+    div.className = "layer-item";
 
-          const results = response.results.filter(r => r.graphic);
+    const chk = document.createElement("input");
+    chk.type = "checkbox";
+    chk.checked = layers.every(l => l.visible);
+    chk.onchange = (e) => layers.forEach(lyr => lyr.visible = e.target.checked);
 
-          if (results.length > 0) {
-            const graphic = results[0].graphic;
-            const attr = graphic.attributes;
+    const span = document.createElement("span");
+    span.innerText = label;
 
-            let tableHTML = "<table>";
+    div.appendChild(chk);
+    div.appendChild(span);
+    parent.appendChild(div);
+  }
 
-            for (let key in attr) {
-              if (attr[key] !== null && attr[key] !== undefined && attr[key] !== "") {
-                tableHTML += `<tr><td class="attr-key">${key}</td><td>${attr[key]}</td></tr>`;
-              }
-            }
+  // Dropdown group
+  const generalGroup = createDropdown("General Information");
 
-            tableHTML += "</table>";
+  addToggle("Main Buildings", [mainByggnad], generalGroup);
+  addToggle("Schools & Route", [schoolLayer, schoolRoute], generalGroup);
+  addToggle("Train Info", [trainStation, trainLines], generalGroup);
 
-            const isSpecialObject = Object.values(attr).includes(targetID);
+  // Outside dropdown
+  addToggle("Area Boundary", [areaLayer], controls);
+  addToggle("Distance From Center", [distansLayer], controls);
+  addToggle("Healthcare Walking Distance", [vardcentralWalking], controls);
 
-            if (isSpecialObject) {
-              tableHTML += `
-                <div style="margin-top: 15px; border-top: 2px solid #ff0000; padding-top: 10px;">
-                  <p style="font-weight: bold; color: #ff0000; margin-bottom: 5px;">
-                    🔴 Special Project Data:
-                  </p>
-                  <a href="Project4.html" target="_blank" class="project-button">
-                    Open Project 4 File
-                  </a>
-                </div>`;
-            }
-
-            document.getElementById("infoContent").innerHTML = tableHTML;
-
-          } else {
-            document.getElementById("infoContent").innerHTML = "No feature selected.";
-          }
-        });
-      });
-
-    });
-  </script>
+});
+</script>
 
 </body>
 </html>
