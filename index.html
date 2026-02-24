@@ -111,6 +111,17 @@ td {
   font-size:11px;
   text-transform:uppercase;
 }
+
+#project4Btn {
+  width:100%;
+  padding:8px;
+  background:#4A90E2;
+  color:#fff;
+  border:none;
+  border-radius:4px;
+  cursor:pointer;
+  margin-bottom:15px;
+}
 </style>
 </head>
 
@@ -119,6 +130,7 @@ td {
 <div id="sidePanel">
   <h2 style="color:#4A90E2;margin:0;">GIS Web Urban</h2>
   <hr style="opacity:0.2;margin:15px 0;">
+  <button id="project4Btn">Open Project 4</button>
   <div id="controls"></div>
 </div>
 
@@ -195,8 +207,8 @@ const vardcentralRenderer = {
   type:"simple",
   symbol:{
     type:"simple-fill",
-    color:[0,150,255,0.4],
-    outline:{ color:"#0096FF", width:2 }
+    color:[0,200,0,0.35],
+    outline:{ color:[0,150,0], width:2 }
   }
 };
 
@@ -220,12 +232,13 @@ const mainByggnad = new GeoJSONLayer({
   url:"Main_byggnad.geojson",
   elevationInfo:{ mode:"on-the-ground" },
   renderer:{
-    type:"simple",
-    symbol:{
+    type:"unique-value",
+    field:"objektidentitet",
+    defaultSymbol:{
       type:"polygon-3d",
       symbolLayers:[{
         type:"extrude",
-        size:20,
+        size:2,
         material:{ color:"#d9d9d9" },
         edges:{
           type:"solid",
@@ -233,7 +246,23 @@ const mainByggnad = new GeoJSONLayer({
           size:0.6
         }
       }]
-    }
+    },
+    uniqueValueInfos:[{
+      value:"86068c15-afde-4284-90fc-ad8735b25416",
+      symbol:{
+        type:"polygon-3d",
+        symbolLayers:[{
+          type:"extrude",
+          size:2,
+          material:{ color:"#ff0000" },
+          edges:{
+            type:"solid",
+            color:"#888",
+            size:0.6
+          }
+        }]
+      }
+    }]
   },
   outFields:["*"]
 });
@@ -315,6 +344,9 @@ map.addMany([
 // ---------------- DROPDOWN UI ----------------
 
 const controls = document.getElementById("controls");
+document.getElementById("project4Btn").onclick = function(){
+  window.location.href = "Project4.html";
+};
 
 function createDropdown(title){
   const container=document.createElement("div");
