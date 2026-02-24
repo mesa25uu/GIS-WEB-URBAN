@@ -52,11 +52,18 @@
 
   <script>
     require([
-      "esri/Map", "esri/views/SceneView", "esri/layers/GeoJSONLayer", "esri/widgets/Home"
+      "esri/Map", 
+      "esri/views/SceneView", 
+      "esri/layers/GeoJSONLayer", 
+      "esri/widgets/Home"
     ], function(Map, SceneView, GeoJSONLayer, Home) {
 
       const targetID = "86068c15-afde-4284-90fc-ad8735b25416";
-      const map = new Map({ basemap: "topo-vector", ground: "world-elevation" });
+
+      const map = new Map({ 
+        basemap: "topo-vector", 
+        ground: "world-elevation" 
+      });
 
       const view = new SceneView({
         container: "viewDiv",
@@ -71,71 +78,153 @@
 
       view.ui.add(new Home({ view: view }), "top-left");
 
-      // --- RENDERERS ---
-      
+      // -----------------------
+      // RENDERERS
+      // -----------------------
+
       const buildingRenderer = {
         type: "unique-value",
         field: "OBJEKTIDENTITET",
         defaultSymbol: {
           type: "polygon-3d",
-          symbolLayers: [{ type: "extrude", size: 15, material: { color: "#4A90E2" }, edges: { type: "solid", color: "white", size: 1 } }]
+          symbolLayers: [{
+            type: "extrude",
+            size: 15,
+            material: { color: "#4A90E2" },
+            edges: { type: "solid", color: "white", size: 1 }
+          }]
         },
         uniqueValueInfos: [{
           value: targetID,
           symbol: {
             type: "polygon-3d",
-            symbolLayers: [{ type: "extrude", size: 20, material: { color: "#ff0000" }, edges: { type: "solid", color: "white", size: 2 } }]
+            symbolLayers: [{
+              type: "extrude",
+              size: 20,
+              material: { color: "#ff0000" },
+              edges: { type: "solid", color: "white", size: 2 }
+            }]
           }
         }]
       };
 
       const areaRenderer = {
         type: "simple",
-        symbol: { type: "simple-fill", color: [0, 0, 0, 0], outline: { color: "#FFD700", width: 3 } }
+        symbol: {
+          type: "simple-fill",
+          color: [0, 0, 0, 0],
+          outline: { color: "#FFD700", width: 3 }
+        }
       };
 
-      // 🔵 UPDATED: Distance Renderer with Multiple Colors
       const distanceRenderer = {
         type: "unique-value",
-        field: "name", // Check your GeoJSON to see if the column is 'name' or 'Name'
+        field: "name",
         defaultSymbol: {
           type: "simple-fill",
-          color: [138, 43, 226, 0.1], // Default Lila
+          color: [138, 43, 226, 0.1],
           outline: { color: "#8A2BE2", width: 2, style: "dash" }
         },
-        uniqueValueInfos: [
-          {
-            value: "Location 1: 2 - 5", // Ensure this matches the name in your file exactly
-            symbol: {
-              type: "simple-fill",
-              color: [0, 122, 255, 0.2], // Blue
-              outline: { color: "#007AFF", width: 3, style: "solid" }
-            }
+        uniqueValueInfos: [{
+          value: "Location 1: 2 - 5",
+          symbol: {
+            type: "simple-fill",
+            color: [0, 122, 255, 0.2],
+            outline: { color: "#007AFF", width: 3, style: "solid" }
           }
-        ]
+        }]
       };
 
-      // Layers
-      const areaLayer = new GeoJSONLayer({ url: "Oxnehaga-Area.geojson", renderer: areaRenderer, outFields: ["*"] });
-      const mainByggnad = new GeoJSONLayer({ url: "Main_byggnad.geojson", renderer: buildingRenderer, outFields: ["*"] });
-      const schoolLayer = new GeoJSONLayer({ url: "Oxnehaga_school.geojson", renderer: buildingRenderer, outFields: ["*"] });
-      const schoolRoute = new GeoJSONLayer({ url: "Oxnehaga_school_route.geojson", outFields: ["*"] });
-      const trainStation = new GeoJSONLayer({ url: "Huskvarna_train_station.geojson", outFields: ["*"] });
-      const trainLines = new GeoJSONLayer({ url: "train.geojson", outFields: ["*"] });
-      const distansLayer = new GeoJSONLayer({ url: "Distans_from_centrum.geojson", renderer: distanceRenderer, outFields: ["*"] });
+      // 🔴 Train Line Renderer (Bigger + Red)
+      const trainLineRenderer = {
+        type: "simple",
+        symbol: {
+          type: "simple-line",
+          color: "#ff0000",
+          width: 4
+        }
+      };
 
-      map.addMany([areaLayer, mainByggnad, schoolLayer, schoolRoute, trainStation, trainLines, distansLayer]);
+      // -----------------------
+      // LAYERS
+      // -----------------------
 
-      // Side Toggles
+      const areaLayer = new GeoJSONLayer({
+        url: "Oxnehaga-Area.geojson",
+        renderer: areaRenderer,
+        outFields: ["*"]
+      });
+
+      const mainByggnad = new GeoJSONLayer({
+        url: "Main_byggnad.geojson",
+        renderer: buildingRenderer,
+        outFields: ["*"]
+      });
+
+      const schoolLayer = new GeoJSONLayer({
+        url: "Oxnehaga_school.geojson",
+        renderer: buildingRenderer,
+        outFields: ["*"]
+      });
+
+      const schoolRoute = new GeoJSONLayer({
+        url: "Oxnehaga_school_route.geojson",
+        outFields: ["*"]
+      });
+
+      const trainStation = new GeoJSONLayer({
+        url: "Huskvarna_train_station.geojson",
+        outFields: ["*"]
+      });
+
+      const trainLines = new GeoJSONLayer({
+        url: "train.geojson",
+        renderer: trainLineRenderer,
+        outFields: ["*"]
+      });
+
+      const distansLayer = new GeoJSONLayer({
+        url: "Distans_from_centrum.geojson",
+        renderer: distanceRenderer,
+        outFields: ["*"]
+      });
+
+      const vardcentralWalking = new GeoJSONLayer({
+        url: "Vardcentral_walking_distance.geojson",
+        outFields: ["*"]
+      });
+
+      map.addMany([
+        areaLayer,
+        mainByggnad,
+        schoolLayer,
+        schoolRoute,
+        trainStation,
+        trainLines,
+        distansLayer,
+        vardcentralWalking
+      ]);
+
+      // -----------------------
+      // SIDEBAR TOGGLES
+      // -----------------------
+
       const controls = document.getElementById("controls");
+
       function addToggle(label, layers) {
         const div = document.createElement("div");
         div.className = "layer-item";
+
         const chk = document.createElement("input");
-        chk.type = "checkbox"; chk.checked = true;
+        chk.type = "checkbox";
+        chk.checked = true;
         chk.onchange = (e) => layers.forEach(lyr => lyr.visible = e.target.checked);
-        const span = document.createElement("span"); span.innerText = label;
-        div.appendChild(chk); div.appendChild(span);
+
+        const span = document.createElement("span");
+        span.innerText = label;
+
+        div.appendChild(chk);
+        div.appendChild(span);
         controls.appendChild(div);
       }
 
@@ -144,22 +233,29 @@
       addToggle("Schools & Route", [schoolLayer, schoolRoute]);
       addToggle("Train Info", [trainStation, trainLines]);
       addToggle("Distance From Center", [distansLayer]);
+      addToggle("Healthcare Walking Distance", [vardcentralWalking]);
 
-      // Click event
+      // -----------------------
+      // CLICK EVENT
+      // -----------------------
+
       view.on("click", (event) => {
         view.hitTest(event).then((response) => {
+
           const results = response.results.filter(r => r.graphic);
-          
+
           if (results.length > 0) {
             const graphic = results[0].graphic;
             const attr = graphic.attributes;
 
             let tableHTML = "<table>";
+
             for (let key in attr) {
               if (attr[key] !== null && attr[key] !== undefined && attr[key] !== "") {
                 tableHTML += `<tr><td class="attr-key">${key}</td><td>${attr[key]}</td></tr>`;
               }
             }
+
             tableHTML += "</table>";
 
             const isSpecialObject = Object.values(attr).includes(targetID);
@@ -167,18 +263,25 @@
             if (isSpecialObject) {
               tableHTML += `
                 <div style="margin-top: 15px; border-top: 2px solid #ff0000; padding-top: 10px;">
-                  <p style="font-weight: bold; color: #ff0000; margin-bottom: 5px;">🔴 Special Project Data:</p>
-                  <a href="Project4.html" target="_blank" class="project-button">Open Project 4 File</a>
+                  <p style="font-weight: bold; color: #ff0000; margin-bottom: 5px;">
+                    🔴 Special Project Data:
+                  </p>
+                  <a href="Project4.html" target="_blank" class="project-button">
+                    Open Project 4 File
+                  </a>
                 </div>`;
             }
 
             document.getElementById("infoContent").innerHTML = tableHTML;
+
           } else {
             document.getElementById("infoContent").innerHTML = "No feature selected.";
           }
         });
       });
+
     });
   </script>
+
 </body>
 </html>
