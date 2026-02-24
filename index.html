@@ -6,29 +6,111 @@
 <link rel="stylesheet" href="https://js.arcgis.com/4.29/esri/themes/light/main.css">
 
 <style>
-html, body { height:100%; width:100%; margin:0; padding:0; display:flex; font-family:'Segoe UI', sans-serif; }
-#sidePanel { width:280px; background:#1f2a38; color:white; padding:20px; overflow-y:auto; }
-#viewDiv { flex:1; height:100vh; position:relative; }
-
-#infoPanel { 
-  position:absolute; top:20px; right:20px; width:320px; max-height:70vh;
-  overflow-y:auto; background:white; border-radius:8px;
-  box-shadow:0 4px 20px rgba(0,0,0,0.4); border:1px solid #ccc;
+html, body {
+  height:100%;
+  width:100%;
+  margin:0;
+  padding:0;
+  display:flex;
+  font-family:'Segoe UI', sans-serif;
 }
-.info-header { background:#4A90E2; color:white; padding:10px 15px; border-radius:8px 8px 0 0; font-weight:bold; }
-#infoContent { padding:15px; font-size:13px; }
 
-.layer-item { margin-bottom:8px; display:flex; align-items:center; background:rgba(255,255,255,0.1); padding:8px; border-radius:4px; }
-.layer-item input { margin-right:10px; }
+#sidePanel {
+  width:280px;
+  background:#1f2a38;
+  color:white;
+  padding:20px;
+  overflow-y:auto;
+}
 
-.dropdown { margin-bottom:10px; }
-.dropdown-header { cursor:pointer; font-weight:bold; padding:8px; background:rgba(255,255,255,0.15); border-radius:4px; display:flex; justify-content:space-between; align-items:center; }
-.dropdown-arrow { transition:0.3s; }
-.dropdown-content { display:none; margin-top:5px; padding-left:10px; }
+#viewDiv {
+  flex:1;
+  height:100vh;
+  position:relative;
+}
 
-table { width:100%; border-collapse:collapse; }
-td { padding:6px 4px; border-bottom:1px solid #eee; vertical-align:top; }
-.attr-key { font-weight:bold; color:#666; width:45%; font-size:11px; text-transform:uppercase; }
+#infoPanel {
+  position:absolute;
+  top:20px;
+  right:20px;
+  width:320px;
+  max-height:70vh;
+  overflow-y:auto;
+  background:white;
+  border-radius:8px;
+  box-shadow:0 4px 20px rgba(0,0,0,0.4);
+  border:1px solid #ccc;
+}
+
+.info-header {
+  background:#4A90E2;
+  color:white;
+  padding:10px 15px;
+  border-radius:8px 8px 0 0;
+  font-weight:bold;
+}
+
+#infoContent {
+  padding:15px;
+  font-size:13px;
+}
+
+.layer-item {
+  margin-bottom:8px;
+  display:flex;
+  align-items:center;
+  background:rgba(255,255,255,0.1);
+  padding:8px;
+  border-radius:4px;
+}
+
+.layer-item input {
+  margin-right:10px;
+}
+
+.dropdown {
+  margin-bottom:10px;
+}
+
+.dropdown-header {
+  cursor:pointer;
+  font-weight:bold;
+  padding:8px;
+  background:rgba(255,255,255,0.15);
+  border-radius:4px;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+}
+
+.dropdown-arrow {
+  transition:0.3s;
+}
+
+.dropdown-content {
+  display:none;
+  margin-top:5px;
+  padding-left:10px;
+}
+
+table {
+  width:100%;
+  border-collapse:collapse;
+}
+
+td {
+  padding:6px 4px;
+  border-bottom:1px solid #eee;
+  vertical-align:top;
+}
+
+.attr-key {
+  font-weight:bold;
+  color:#666;
+  width:45%;
+  font-size:11px;
+  text-transform:uppercase;
+}
 </style>
 </head>
 
@@ -114,6 +196,18 @@ const vardcentralRenderer = {
   }
 };
 
+const distanceRenderer = {
+  type:"simple",
+  symbol:{
+    type:"simple-fill",
+    color:[255,165,0,0.3], // light orange 30%
+    outline:{
+      color:[255,140,0],
+      width:2
+    }
+  }
+};
+
 
 // ---------------- LAYERS ----------------
 
@@ -153,12 +247,29 @@ const trainLines = new GeoJSONLayer({
 const distansLayer = new GeoJSONLayer({
   url:"Distans_from_centrum.geojson",
   visible:false,
+  renderer:distanceRenderer,
   outFields:["*"]
 });
 
 const vardcentralWalking = new GeoJSONLayer({
   url:"Vardcentral_walking_distance.geojson",
   renderer:vardcentralRenderer,
+  outFields:["*"]
+});
+
+// SERVICES
+const kindergartenLayer = new GeoJSONLayer({
+  url:"Kinder_Garden.geojson",
+  outFields:["*"]
+});
+
+const schoolServiceLayer = new GeoJSONLayer({
+  url:"Oxnehaga_school.geojson",
+  outFields:["*"]
+});
+
+const busStopLayer = new GeoJSONLayer({
+  url:"Bus_stop.geojson",
   outFields:["*"]
 });
 
@@ -170,7 +281,10 @@ map.addMany([
   trainStation,
   trainLines,
   distansLayer,
-  vardcentralWalking
+  vardcentralWalking,
+  kindergartenLayer,
+  schoolServiceLayer,
+  busStopLayer
 ]);
 
 
@@ -231,7 +345,6 @@ function addToggle(label,layers,parent){
 
 // 📂 GENERAL INFORMATION
 const generalGroup=createDropdown("General Information");
-
 addToggle("Area Boundary",[areaLayer],generalGroup);
 addToggle("Main Buildings",[mainByggnad],generalGroup);
 addToggle("Train Info",[trainStation,trainLines],generalGroup);
@@ -239,10 +352,16 @@ addToggle("Train Info",[trainStation,trainLines],generalGroup);
 
 // 📂 ANALYS
 const analysGroup=createDropdown("Analys");
-
 addToggle("Route from school to train station",[schoolLayer,schoolRoute],analysGroup);
 addToggle("Healthcare Walking Distance",[vardcentralWalking],analysGroup);
 addToggle("Distance From Center",[distansLayer],analysGroup);
+
+
+// 📂 SERVICES
+const servicesGroup=createDropdown("Services");
+addToggle("Kindergarten",[kindergartenLayer],servicesGroup);
+addToggle("School",[schoolServiceLayer],servicesGroup);
+addToggle("Bus Stop",[busStopLayer],servicesGroup);
 
 
 // ---------------- ATTRIBUTE DISPLAY ----------------
@@ -262,10 +381,11 @@ view.on("click",function(event){
       let tableHTML="<table>";
 
       for(let key in attr){
-        tableHTML+=`<tr>
-          <td class="attr-key">${key}</td>
-          <td>${attr[key]}</td>
-        </tr>`;
+        tableHTML+=`
+          <tr>
+            <td class="attr-key">${key}</td>
+            <td>${attr[key]}</td>
+          </tr>`;
       }
 
       tableHTML+="</table>";
