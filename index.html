@@ -1,47 +1,49 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <meta charset="utf-8">
-  <title>Urban Map - Oxnehaga</title>
-  <link rel="stylesheet" href="https://js.arcgis.com/4.29/esri/themes/light/main.css">
-  <style>
-    html, body { height: 100%; width: 100%; margin: 0; padding: 0; display: flex; font-family: 'Segoe UI', sans-serif; }
-    #sidePanel { width: 280px; background-color: #1f2a38; color: white; padding: 20px; z-index: 5; box-shadow: 2px 0 10px rgba(0,0,0,0.5); overflow-y: auto; }
-    #viewDiv { flex: 1; height: 100vh; position: relative; background-color: #eee; }
-    
-    #infoPanel { 
-      position: absolute; top: 20px; right: 20px; width: 300px; max-height: 70vh; 
-      overflow-y: auto; background: white; border-radius: 8px; 
-      box-shadow: 0 4px 20px rgba(0,0,0,0.4); z-index: 10; border: 1px solid #ccc; 
-    }
+<meta charset="utf-8">
+<title>Urban Map - Oxnehaga</title>
+<link rel="stylesheet" href="https://js.arcgis.com/4.29/esri/themes/light/main.css">
 
-    .info-header { background: #4A90E2; color: white; padding: 10px 15px; border-radius: 8px 8px 0 0; font-weight: bold; }
-    #infoContent { padding: 15px; font-size: 13px; color: #333; line-height: 1.6; }
+<style>
+html, body { height:100%; width:100%; margin:0; padding:0; display:flex; font-family:'Segoe UI', sans-serif; }
+#sidePanel { width:280px; background:#1f2a38; color:white; padding:20px; overflow-y:auto; }
+#viewDiv { flex:1; height:100vh; position:relative; }
 
-    .layer-item { margin-bottom: 8px; display: flex; align-items: center; background: rgba(255,255,255,0.1); padding: 8px; border-radius: 4px; }
-    .layer-item input { margin-right: 10px; cursor: pointer; }
+#infoPanel { 
+  position:absolute; top:20px; right:20px; width:320px; max-height:70vh;
+  overflow-y:auto; background:white; border-radius:8px;
+  box-shadow:0 4px 20px rgba(0,0,0,0.4); border:1px solid #ccc;
+}
+.info-header { background:#4A90E2; color:white; padding:10px 15px; border-radius:8px 8px 0 0; font-weight:bold; }
+#infoContent { padding:15px; font-size:13px; }
 
-    .dropdown { margin-bottom: 10px; }
-    .dropdown-header { cursor: pointer; font-weight: bold; padding: 8px; background: rgba(255,255,255,0.15); border-radius: 4px; }
-    .dropdown-content { display: none; margin-top: 5px; padding-left: 10px; }
+.layer-item { margin-bottom:8px; display:flex; align-items:center; background:rgba(255,255,255,0.1); padding:8px; border-radius:4px; }
+.layer-item input { margin-right:10px; }
 
-    table { width: 100%; border-collapse: collapse; }
-    td { padding: 6px 4px; border-bottom: 1px solid #eee; vertical-align: top; }
-    .attr-key { font-weight: bold; color: #666; width: 40%; font-size: 11px; text-transform: uppercase; }
-  </style>
+.dropdown { margin-bottom:10px; }
+.dropdown-header { cursor:pointer; font-weight:bold; padding:8px; background:rgba(255,255,255,0.15); border-radius:4px; display:flex; justify-content:space-between; align-items:center; }
+.dropdown-arrow { transition:0.3s; }
+.dropdown-content { display:none; margin-top:5px; padding-left:10px; }
+
+table { width:100%; border-collapse:collapse; }
+td { padding:6px 4px; border-bottom:1px solid #eee; vertical-align:top; }
+.attr-key { font-weight:bold; color:#666; width:45%; font-size:11px; text-transform:uppercase; }
+</style>
 </head>
+
 <body>
 
 <div id="sidePanel">
-  <h2 style="color: #4A90E2; margin: 0;">GIS Web Urban</h2>
-  <hr style="opacity: 0.2; margin: 15px 0;">
+  <h2 style="color:#4A90E2;margin:0;">GIS Web Urban</h2>
+  <hr style="opacity:0.2;margin:15px 0;">
   <div id="controls"></div>
 </div>
 
 <div id="viewDiv">
   <div id="infoPanel">
     <div class="info-header">Feature Details</div>
-    <div id="infoContent">Click on a building or object to see its information.</div>
+    <div id="infoContent">Click on a feature to see all attributes.</div>
   </div>
 </div>
 
@@ -49,194 +51,229 @@
 
 <script>
 require([
-  "esri/Map", 
-  "esri/views/SceneView", 
-  "esri/layers/GeoJSONLayer", 
+  "esri/Map",
+  "esri/views/SceneView",
+  "esri/layers/GeoJSONLayer",
   "esri/widgets/Home"
 ], function(Map, SceneView, GeoJSONLayer, Home) {
 
-  const targetID = "86068c15-afde-4284-90fc-ad8735b25416";
+const map = new Map({
+  basemap: "topo-vector",
+  ground: "world-elevation"
+});
 
-  const map = new Map({ 
-    basemap: "topo-vector", 
-    ground: "world-elevation" 
-  });
+const view = new SceneView({
+  container: "viewDiv",
+  map: map,
+  camera: {
+    position: { longitude:14.2622409, latitude:57.7781582, z:5000 },
+    tilt:0
+  },
+  popupEnabled:false
+});
 
-  const view = new SceneView({
-    container: "viewDiv",
-    map: map,
-    camera: {
-      position: { longitude: 14.2622409, latitude: 57.7781582, z: 5000 },
-      tilt: 0,
-      heading: 0
-    },
-    popupEnabled: false 
-  });
+view.ui.add(new Home({ view:view }), "top-left");
 
-  view.ui.add(new Home({ view: view }), "top-left");
 
-  // ---------------- RENDERERS ----------------
+// ---------------- RENDERERS ----------------
 
-  const buildingRenderer = {
-    type: "polygon-3d",
-    symbolLayers: [{
-      type: "extrude",
-      size: 15,
-      material: { color: "#4A90E2" },
-      edges: { type: "solid", color: "white", size: 1 }
-    }]
-  };
-
-  const trainLineRenderer = {
-    type: "simple",
-    symbol: {
-      type: "simple-line",
-      color: "#ff0000",
-      width: 4
-    }
-  };
-
-  const schoolRouteRenderer = {
-    type: "simple",
-    symbol: {
-      type: "simple-line",
-      color: "#8A2BE2",  // Lilla (purple)
-      width: 5
-    }
-  };
-
-  const distanceRenderer = {
-    type: "simple",
-    symbol: {
-      type: "simple-fill",
-      color: [138, 43, 226, 0.1],
-      outline: { color: "#8A2BE2", width: 2 }
-    }
-  };
-
-  const vardcentralRenderer = {
-    type: "simple",
-    symbol: {
-      type: "simple-fill",
-      color: [0, 150, 255, 0.4], // light blue 40%
-      outline: { color: "#0096FF", width: 2 }
-    }
-  };
-
-  // ---------------- LAYERS ----------------
-
-  const areaLayer = new GeoJSONLayer({
-    url: "Oxnehaga-Area.geojson",
-    outFields: ["*"]
-  });
-
-  const mainByggnad = new GeoJSONLayer({
-    url: "Main_byggnad.geojson",
-    renderer: buildingRenderer,
-    outFields: ["*"]
-  });
-
-  const schoolLayer = new GeoJSONLayer({
-    url: "Oxnehaga_school.geojson",
-    renderer: buildingRenderer,
-    outFields: ["*"]
-  });
-
-  const schoolRoute = new GeoJSONLayer({
-    url: "Oxnehaga_school_route.geojson",
-    renderer: schoolRouteRenderer,
-    outFields: ["*"]
-  });
-
-  const trainStation = new GeoJSONLayer({
-    url: "Huskvarna_train_station.geojson",
-    outFields: ["*"]
-  });
-
-  const trainLines = new GeoJSONLayer({
-    url: "train.geojson",
-    renderer: trainLineRenderer,
-    outFields: ["*"]
-  });
-
-  const distansLayer = new GeoJSONLayer({
-    url: "Distans_from_centrum.geojson",
-    renderer: distanceRenderer,
-    visible: false,   // OFF from start
-    outFields: ["*"]
-  });
-
-  const vardcentralWalking = new GeoJSONLayer({
-    url: "Vardcentral_walking_distance.geojson",
-    renderer: vardcentralRenderer,
-    outFields: ["*"]
-  });
-
-  map.addMany([
-    areaLayer,
-    mainByggnad,
-    schoolLayer,
-    schoolRoute,
-    trainStation,
-    trainLines,
-    distansLayer,
-    vardcentralWalking
-  ]);
-
-  // ---------------- SIDEBAR UI ----------------
-
-  const controls = document.getElementById("controls");
-
-  function createDropdown(title) {
-    const container = document.createElement("div");
-    container.className = "dropdown";
-
-    const header = document.createElement("div");
-    header.className = "dropdown-header";
-    header.innerText = title;
-
-    const content = document.createElement("div");
-    content.className = "dropdown-content";
-
-    header.onclick = () => {
-      content.style.display = content.style.display === "block" ? "none" : "block";
-    };
-
-    container.appendChild(header);
-    container.appendChild(content);
-    controls.appendChild(container);
-
-    return content;
+// 🟢 Area Boundary – only green contour
+const areaRenderer = {
+  type:"simple",
+  symbol:{
+    type:"simple-fill",
+    color:[0,0,0,0], // no fill
+    outline:{ color:"#00aa00", width:3 }
   }
+};
 
-  function addToggle(label, layers, parent) {
-    const div = document.createElement("div");
-    div.className = "layer-item";
-
-    const chk = document.createElement("input");
-    chk.type = "checkbox";
-    chk.checked = layers.every(l => l.visible);
-    chk.onchange = (e) => layers.forEach(lyr => lyr.visible = e.target.checked);
-
-    const span = document.createElement("span");
-    span.innerText = label;
-
-    div.appendChild(chk);
-    div.appendChild(span);
-    parent.appendChild(div);
+// 🚆 Train dashed red line
+const trainLineRenderer = {
+  type:"simple",
+  symbol:{
+    type:"simple-line",
+    color:"#ff0000",
+    width:4,
+    style:"dash"
   }
+};
 
-  // Dropdown group
-  const generalGroup = createDropdown("General Information");
+// 🟣 School route bigger lilla
+const schoolRouteRenderer = {
+  type:"simple",
+  symbol:{
+    type:"simple-line",
+    color:"#8A2BE2",
+    width:5
+  }
+};
 
-  addToggle("Main Buildings", [mainByggnad], generalGroup);
-  addToggle("Schools & Route", [schoolLayer, schoolRoute], generalGroup);
-  addToggle("Train Info", [trainStation, trainLines], generalGroup);
+// 🔵 Walking distance 40% light blue
+const vardcentralRenderer = {
+  type:"simple",
+  symbol:{
+    type:"simple-fill",
+    color:[0,150,255,0.4],
+    outline:{ color:"#0096FF", width:2 }
+  }
+};
 
-  // Outside dropdown
-  addToggle("Area Boundary", [areaLayer], controls);
-  addToggle("Distance From Center", [distansLayer], controls);
-  addToggle("Healthcare Walking Distance", [vardcentralWalking], controls);
+// ---------------- LAYERS ----------------
+
+const areaLayer = new GeoJSONLayer({
+  url:"Oxnehaga-Area.geojson",
+  renderer:areaRenderer,
+  outFields:["*"]
+});
+
+const mainByggnad = new GeoJSONLayer({
+  url:"Main_byggnad.geojson",
+  outFields:["*"]
+});
+
+const schoolLayer = new GeoJSONLayer({
+  url:"Oxnehaga_school.geojson",
+  outFields:["*"]
+});
+
+const schoolRoute = new GeoJSONLayer({
+  url:"Oxnehaga_school_route.geojson",
+  renderer:schoolRouteRenderer,
+  outFields:["*"]
+});
+
+const trainStation = new GeoJSONLayer({
+  url:"Huskvarna_train_station.geojson",
+  outFields:["*"]
+});
+
+const trainLines = new GeoJSONLayer({
+  url:"train.geojson",
+  renderer:trainLineRenderer,
+  outFields:["*"]
+});
+
+const distansLayer = new GeoJSONLayer({
+  url:"Distans_from_centrum.geojson",
+  visible:false,
+  outFields:["*"]
+});
+
+const vardcentralWalking = new GeoJSONLayer({
+  url:"Vardcentral_walking_distance.geojson",
+  renderer:vardcentralRenderer,
+  outFields:["*"]
+});
+
+map.addMany([
+  areaLayer,
+  mainByggnad,
+  schoolLayer,
+  schoolRoute,
+  trainStation,
+  trainLines,
+  distansLayer,
+  vardcentralWalking
+]);
+
+
+// ---------------- DROPDOWN UI ----------------
+
+const controls = document.getElementById("controls");
+
+function createDropdown(title){
+  const container = document.createElement("div");
+  container.className="dropdown";
+
+  const header = document.createElement("div");
+  header.className="dropdown-header";
+
+  const text = document.createElement("span");
+  text.innerText=title;
+
+  const arrow = document.createElement("span");
+  arrow.innerHTML="▶";
+  arrow.className="dropdown-arrow";
+
+  header.appendChild(text);
+  header.appendChild(arrow);
+
+  const content = document.createElement("div");
+  content.className="dropdown-content";
+
+  header.onclick=()=>{
+    const open = content.style.display==="block";
+    content.style.display = open ? "none" : "block";
+    arrow.style.transform = open ? "rotate(0deg)" : "rotate(90deg)";
+  };
+
+  container.appendChild(header);
+  container.appendChild(content);
+  controls.appendChild(container);
+
+  return content;
+}
+
+function addToggle(label,layers,parent){
+  const div=document.createElement("div");
+  div.className="layer-item";
+
+  const chk=document.createElement("input");
+  chk.type="checkbox";
+  chk.checked=layers.every(l=>l.visible);
+  chk.onchange=(e)=>layers.forEach(l=>l.visible=e.target.checked);
+
+  const span=document.createElement("span");
+  span.innerText=label;
+
+  div.appendChild(chk);
+  div.appendChild(span);
+  parent.appendChild(div);
+}
+
+const generalGroup=createDropdown("General Information");
+
+addToggle("Main Buildings",[mainByggnad],generalGroup);
+addToggle("Schools & Route",[schoolLayer,schoolRoute],generalGroup);
+addToggle("Train Info",[trainStation,trainLines],generalGroup);
+
+addToggle("Area Boundary",[areaLayer],controls);
+addToggle("Distance From Center",[distansLayer],controls);
+addToggle("Healthcare Walking Distance",[vardcentralWalking],controls);
+
+
+// ---------------- ATTRIBUTES FIX ----------------
+
+view.on("click",function(event){
+  view.hitTest(event).then(function(response){
+
+    const results=response.results.filter(r =>
+      r.graphic &&
+      r.graphic.layer &&
+      r.graphic.layer.type==="geojson"
+    );
+
+    if(results.length>0){
+
+      let attr=results[0].graphic.attributes;
+      let tableHTML="<table>";
+
+      for(let key in attr){
+        tableHTML+=`<tr>
+          <td class="attr-key">${key}</td>
+          <td>${attr[key]}</td>
+        </tr>`;
+      }
+
+      tableHTML+="</table>";
+      document.getElementById("infoContent").innerHTML=tableHTML;
+
+    } else {
+      document.getElementById("infoContent").innerHTML="No feature selected.";
+    }
+
+  });
+});
 
 });
 </script>
