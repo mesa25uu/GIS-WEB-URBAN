@@ -50,7 +50,10 @@ html, body {
   font-weight:bold;
 }
 
-#infoContent { padding:15px; font-size:13px; }
+#infoContent {
+  padding:15px;
+  font-size:13px;
+}
 
 .layer-item {
   margin-bottom:8px;
@@ -61,9 +64,13 @@ html, body {
   border-radius:4px;
 }
 
-.layer-item input { margin-right:10px; }
+.layer-item input {
+  margin-right:10px;
+}
 
-.dropdown { margin-bottom:10px; }
+.dropdown {
+  margin-bottom:10px;
+}
 
 .dropdown-header {
   cursor:pointer;
@@ -76,11 +83,26 @@ html, body {
   align-items:center;
 }
 
-.dropdown-arrow { transition:0.3s; }
-.dropdown-content { display:none; margin-top:5px; padding-left:10px; }
+.dropdown-arrow {
+  transition:0.3s;
+}
 
-table { width:100%; border-collapse:collapse; }
-td { padding:6px 4px; border-bottom:1px solid #eee; vertical-align:top; }
+.dropdown-content {
+  display:none;
+  margin-top:5px;
+  padding-left:10px;
+}
+
+table {
+  width:100%;
+  border-collapse:collapse;
+}
+
+td {
+  padding:6px 4px;
+  border-bottom:1px solid #eee;
+  vertical-align:top;
+}
 
 .attr-key {
   font-weight:bold;
@@ -118,16 +140,16 @@ require([
 ], function(Map, SceneView, GeoJSONLayer, Home) {
 
 const map = new Map({
-  basemap:"topo-vector",
-  ground:"world-elevation"
+  basemap: "topo-vector",
+  ground: "world-elevation"
 });
 
 const view = new SceneView({
-  container:"viewDiv",
-  map:map,
-  camera:{
-    position:{ longitude:14.2622409, latitude:57.7781582, z:1200 },
-    tilt:55
+  container: "viewDiv",
+  map: map,
+  camera: {
+    position: { longitude:14.2622409, latitude:57.7781582, z:5000 },
+    tilt:45
   },
   popupEnabled:false
 });
@@ -136,19 +158,6 @@ view.ui.add(new Home({ view:view }), "top-left");
 
 
 // ---------------- RENDERERS ----------------
-
-const buildingRenderer = {
-  type:"simple",
-  symbol:{
-    type:"polygon-3d",
-    symbolLayers:[{
-      type:"extrude",
-      size:25,
-      material:{ color:"#d9d9d9" },
-      edges:{ type:"solid", color:"#888", size:0.5 }
-    }]
-  }
-};
 
 const areaRenderer = {
   type:"simple",
@@ -159,17 +168,71 @@ const areaRenderer = {
   }
 };
 
+const trainLineRenderer = {
+  type:"simple",
+  symbol:{
+    type:"simple-line",
+    color:"#ff0000",
+    width:4,
+    style:"dash"
+  }
+};
+
+const schoolRouteRenderer = {
+  type:"simple",
+  symbol:{
+    type:"simple-line",
+    color:"#8A2BE2",
+    width:5
+  }
+};
+
+const vardcentralRenderer = {
+  type:"simple",
+  symbol:{
+    type:"simple-fill",
+    color:[0,150,255,0.4],
+    outline:{ color:"#0096FF", width:2 }
+  }
+};
+
 const distanceRenderer = {
   type:"simple",
   symbol:{
     type:"simple-fill",
     color:[255,165,0,0.3],
-    outline:{ color:[255,140,0], width:2 }
+    outline:{
+      color:[255,140,0],
+      width:2
+    }
   }
 };
 
 
 // ---------------- LAYERS ----------------
+
+// 3D BUILDINGS RESTORED
+const mainByggnad = new GeoJSONLayer({
+  url:"Main_byggnad.geojson",
+  elevationInfo:{ mode:"on-the-ground" },
+  renderer:{
+    type:"simple",
+    symbol:{
+      type:"polygon-3d",
+      symbolLayers:[{
+        type:"extrude",
+        size:20,
+        material:{ color:"#d9d9d9" },
+        edges:{
+          type:"solid",
+          color:"#888",
+          size:0.6
+        }
+      }]
+    }
+  },
+  outFields:["*"]
+});
 
 const areaLayer = new GeoJSONLayer({
   url:"Oxnehaga-Area.geojson",
@@ -177,17 +240,27 @@ const areaLayer = new GeoJSONLayer({
   outFields:["*"]
 });
 
-const mainBuilding3D = new GeoJSONLayer({
-  url:"Main_byggnad.geojson",
-  elevationInfo:{ mode:"on-the-ground" },
-  renderer:buildingRenderer,
+const schoolLayer = new GeoJSONLayer({
+  url:"Oxnehaga_school.geojson",
   outFields:["*"]
 });
 
-const schoolLayer = new GeoJSONLayer({ url:"Oxnehaga_school.geojson", outFields:["*"] });
-const schoolRoute = new GeoJSONLayer({ url:"Oxnehaga_school_route.geojson", outFields:["*"] });
-const trainStation = new GeoJSONLayer({ url:"Huskvarna_train_station.geojson", outFields:["*"] });
-const trainLines = new GeoJSONLayer({ url:"train.geojson", outFields:["*"] });
+const schoolRoute = new GeoJSONLayer({
+  url:"Oxnehaga_school_route.geojson",
+  renderer:schoolRouteRenderer,
+  outFields:["*"]
+});
+
+const trainStation = new GeoJSONLayer({
+  url:"Huskvarna_train_station.geojson",
+  outFields:["*"]
+});
+
+const trainLines = new GeoJSONLayer({
+  url:"train.geojson",
+  renderer:trainLineRenderer,
+  outFields:["*"]
+});
 
 const distansLayer = new GeoJSONLayer({
   url:"Distans_from_centrum.geojson",
@@ -198,16 +271,29 @@ const distansLayer = new GeoJSONLayer({
 
 const vardcentralWalking = new GeoJSONLayer({
   url:"Vardcentral_walking_distance.geojson",
+  renderer:vardcentralRenderer,
   outFields:["*"]
 });
 
-const kindergartenLayer = new GeoJSONLayer({ url:"Kinder_Garden.geojson", outFields:["*"] });
-const schoolServiceLayer = new GeoJSONLayer({ url:"Oxnehaga_school.geojson", outFields:["*"] });
-const busStopLayer = new GeoJSONLayer({ url:"Bus_stop.geojson", outFields:["*"] });
+// SERVICES
+const kindergartenLayer = new GeoJSONLayer({
+  url:"Kinder_Garden.geojson",
+  outFields:["*"]
+});
+
+const schoolServiceLayer = new GeoJSONLayer({
+  url:"Oxnehaga_school.geojson",
+  outFields:["*"]
+});
+
+const busStopLayer = new GeoJSONLayer({
+  url:"Bus_stop.geojson",
+  outFields:["*"]
+});
 
 map.addMany([
   areaLayer,
-  mainBuilding3D,
+  mainByggnad,
   schoolLayer,
   schoolRoute,
   trainStation,
@@ -220,9 +306,9 @@ map.addMany([
 ]);
 
 
-// ---------------- DROPDOWNS ----------------
+// ---------------- DROPDOWN UI ----------------
 
-const controls=document.getElementById("controls");
+const controls = document.getElementById("controls");
 
 function createDropdown(title){
   const container=document.createElement("div");
@@ -257,14 +343,14 @@ function createDropdown(title){
   return content;
 }
 
-function addToggle(label,layer,parent){
+function addToggle(label,layers,parent){
   const div=document.createElement("div");
   div.className="layer-item";
 
   const chk=document.createElement("input");
   chk.type="checkbox";
-  chk.checked=true;
-  chk.onchange=()=>layer.visible=chk.checked;
+  chk.checked=layers.every(l=>l.visible);
+  chk.onchange=(e)=>layers.forEach(l=>l.visible=e.target.checked);
 
   const span=document.createElement("span");
   span.innerText=label;
@@ -275,23 +361,60 @@ function addToggle(label,layer,parent){
 }
 
 
-// GENERAL INFORMATION
-const general=createDropdown("General Information");
-addToggle("Area Boundary",areaLayer,general);
-addToggle("Main_Building_3D",mainBuilding3D,general);
-addToggle("Train Info",trainStation,general);
+// DROPDOWNS
+const generalGroup=createDropdown("General Information");
+addToggle("Area Boundary",[areaLayer],generalGroup);
+addToggle("Main Buildings",[mainByggnad],generalGroup);
+addToggle("Train Info",[trainStation,trainLines],generalGroup);
 
-// ANALYS
-const analys=createDropdown("Analys");
-addToggle("Route from school to train station",schoolRoute,analys);
-addToggle("Healthcare Walking Distance",vardcentralWalking,analys);
-addToggle("Distance From Center",distansLayer,analys);
 
-// SERVICES
-const services=createDropdown("Services");
-addToggle("Kindergarten",kindergartenLayer,services);
-addToggle("School",schoolServiceLayer,services);
-addToggle("Bus Stop",busStopLayer,services);
+
+const analysGroup=createDropdown("Analys");
+addToggle("Route from school to train station",[schoolLayer,schoolRoute],analysGroup);
+addToggle("Healthcare Walking Distance",[vardcentralWalking],analysGroup);
+addToggle("Distance From Center",[distansLayer],analysGroup);
+
+
+
+const servicesGroup=createDropdown("Services");
+addToggle("Kindergarten",[kindergartenLayer],servicesGroup);
+addToggle("School",[schoolServiceLayer],servicesGroup);
+addToggle("Bus Stop",[busStopLayer],servicesGroup);
+
+
+// ATTRIBUTE DISPLAY
+
+view.on("click",function(event){
+  view.hitTest(event).then(function(response){
+
+    const results=response.results.filter(r =>
+      r.graphic &&
+      r.graphic.layer &&
+      r.graphic.layer.type==="geojson"
+    );
+
+    if(results.length>0){
+
+      let attr=results[0].graphic.attributes;
+      let tableHTML="<table>";
+
+      for(let key in attr){
+        tableHTML+=`
+          <tr>
+            <td class="attr-key">${key}</td>
+            <td>${attr[key]}</td>
+          </tr>`;
+      }
+
+      tableHTML+="</table>";
+      document.getElementById("infoContent").innerHTML=tableHTML;
+
+    } else {
+      document.getElementById("infoContent").innerHTML="No feature selected.";
+    }
+
+  });
+});
 
 });
 </script>
