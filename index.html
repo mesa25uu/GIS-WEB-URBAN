@@ -149,7 +149,7 @@ const view = new SceneView({
   map: map,
   camera: {
     position: { longitude:14.2622409, latitude:57.7781582, z:5000 },
-    tilt:0
+    tilt:45
   },
   popupEnabled:false
 });
@@ -200,7 +200,7 @@ const distanceRenderer = {
   type:"simple",
   symbol:{
     type:"simple-fill",
-    color:[255,165,0,0.3], // light orange 30%
+    color:[255,165,0,0.3],
     outline:{
       color:[255,140,0],
       width:2
@@ -211,14 +211,32 @@ const distanceRenderer = {
 
 // ---------------- LAYERS ----------------
 
-const areaLayer = new GeoJSONLayer({
-  url:"Oxnehaga-Area.geojson",
-  renderer:areaRenderer,
+// 3D BUILDINGS RESTORED
+const mainByggnad = new GeoJSONLayer({
+  url:"Main_byggnad.geojson",
+  elevationInfo:{ mode:"on-the-ground" },
+  renderer:{
+    type:"simple",
+    symbol:{
+      type:"polygon-3d",
+      symbolLayers:[{
+        type:"extrude",
+        size:20,
+        material:{ color:"#d9d9d9" },
+        edges:{
+          type:"solid",
+          color:"#888",
+          size:0.6
+        }
+      }]
+    }
+  },
   outFields:["*"]
 });
 
-const mainByggnad = new GeoJSONLayer({
-  url:"Main_byggnad.geojson",
+const areaLayer = new GeoJSONLayer({
+  url:"Oxnehaga-Area.geojson",
+  renderer:areaRenderer,
   outFields:["*"]
 });
 
@@ -343,29 +361,24 @@ function addToggle(label,layers,parent){
 }
 
 
-// 📂 GENERAL INFORMATION
+// DROPDOWNS
 const generalGroup=createDropdown("General Information");
 addToggle("Area Boundary",[areaLayer],generalGroup);
 addToggle("Main Buildings",[mainByggnad],generalGroup);
 addToggle("Train Info",[trainStation,trainLines],generalGroup);
 
-
-// 📂 ANALYS
 const analysGroup=createDropdown("Analys");
 addToggle("Route from school to train station",[schoolLayer,schoolRoute],analysGroup);
 addToggle("Healthcare Walking Distance",[vardcentralWalking],analysGroup);
 addToggle("Distance From Center",[distansLayer],analysGroup);
 
-
-// 📂 SERVICES
 const servicesGroup=createDropdown("Services");
 addToggle("Kindergarten",[kindergartenLayer],servicesGroup);
 addToggle("School",[schoolServiceLayer],servicesGroup);
 addToggle("Bus Stop",[busStopLayer],servicesGroup);
 
 
-// ---------------- ATTRIBUTE DISPLAY ----------------
-
+// ATTRIBUTE DISPLAY
 view.on("click",function(event){
   view.hitTest(event).then(function(response){
 
@@ -376,7 +389,6 @@ view.on("click",function(event){
     );
 
     if(results.length>0){
-
       let attr=results[0].graphic.attributes;
       let tableHTML="<table>";
 
@@ -394,7 +406,6 @@ view.on("click",function(event){
     } else {
       document.getElementById("infoContent").innerHTML="No feature selected.";
     }
-
   });
 });
 
