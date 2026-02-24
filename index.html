@@ -77,17 +77,15 @@ view.ui.add(new Home({ view:view }), "top-left");
 
 // ---------------- RENDERERS ----------------
 
-// 🟢 Area Boundary – only green contour
 const areaRenderer = {
   type:"simple",
   symbol:{
     type:"simple-fill",
-    color:[0,0,0,0], // no fill
+    color:[0,0,0,0],
     outline:{ color:"#00aa00", width:3 }
   }
 };
 
-// 🚆 Train dashed red line
 const trainLineRenderer = {
   type:"simple",
   symbol:{
@@ -98,7 +96,6 @@ const trainLineRenderer = {
   }
 };
 
-// 🟣 School route bigger lilla
 const schoolRouteRenderer = {
   type:"simple",
   symbol:{
@@ -108,7 +105,6 @@ const schoolRouteRenderer = {
   }
 };
 
-// 🔵 Walking distance 40% light blue
 const vardcentralRenderer = {
   type:"simple",
   symbol:{
@@ -117,6 +113,7 @@ const vardcentralRenderer = {
     outline:{ color:"#0096FF", width:2 }
   }
 };
+
 
 // ---------------- LAYERS ----------------
 
@@ -182,29 +179,29 @@ map.addMany([
 const controls = document.getElementById("controls");
 
 function createDropdown(title){
-  const container = document.createElement("div");
+  const container=document.createElement("div");
   container.className="dropdown";
 
-  const header = document.createElement("div");
+  const header=document.createElement("div");
   header.className="dropdown-header";
 
-  const text = document.createElement("span");
+  const text=document.createElement("span");
   text.innerText=title;
 
-  const arrow = document.createElement("span");
+  const arrow=document.createElement("span");
   arrow.innerHTML="▶";
   arrow.className="dropdown-arrow";
 
   header.appendChild(text);
   header.appendChild(arrow);
 
-  const content = document.createElement("div");
+  const content=document.createElement("div");
   content.className="dropdown-content";
 
   header.onclick=()=>{
-    const open = content.style.display==="block";
-    content.style.display = open ? "none" : "block";
-    arrow.style.transform = open ? "rotate(0deg)" : "rotate(90deg)";
+    const open=content.style.display==="block";
+    content.style.display=open?"none":"block";
+    arrow.style.transform=open?"rotate(0deg)":"rotate(90deg)";
   };
 
   container.appendChild(header);
@@ -231,18 +228,24 @@ function addToggle(label,layers,parent){
   parent.appendChild(div);
 }
 
+
+// 📂 GENERAL INFORMATION
 const generalGroup=createDropdown("General Information");
 
+addToggle("Area Boundary",[areaLayer],generalGroup);
 addToggle("Main Buildings",[mainByggnad],generalGroup);
-addToggle("Schools & Route",[schoolLayer,schoolRoute],generalGroup);
 addToggle("Train Info",[trainStation,trainLines],generalGroup);
 
-addToggle("Area Boundary",[areaLayer],controls);
-addToggle("Distance From Center",[distansLayer],controls);
-addToggle("Healthcare Walking Distance",[vardcentralWalking],controls);
+
+// 📂 ANALYS
+const analysGroup=createDropdown("Analys");
+
+addToggle("Route from school to train station",[schoolLayer,schoolRoute],analysGroup);
+addToggle("Healthcare Walking Distance",[vardcentralWalking],analysGroup);
+addToggle("Distance From Center",[distansLayer],analysGroup);
 
 
-// ---------------- ATTRIBUTES FIX ----------------
+// ---------------- ATTRIBUTE DISPLAY ----------------
 
 view.on("click",function(event){
   view.hitTest(event).then(function(response){
