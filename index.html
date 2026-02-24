@@ -220,25 +220,25 @@ const distanceRenderer = {
   }
 };
 
-// NEW: BUS ICON RENDERER
+// BUS ICON RENDERER
 const busRenderer = {
   type: "simple",
   symbol: {
     type: "picture-marker",
     url: "https://static.arcgis.com/images/Symbols/Transportation/BusStation.png",
-    width: "22px",
-    height: "22px"
+    width: "24px",
+    height: "24px"
   }
 };
 
-// NEW: SCHOOL ICON RENDERER
+// SCHOOL ICON RENDERER
 const schoolIconRenderer = {
   type: "simple",
   symbol: {
     type: "picture-marker",
     url: "https://static.arcgis.com/images/Symbols/Education/School.png",
-    width: "22px",
-    height: "22px"
+    width: "24px",
+    height: "24px"
   }
 };
 
@@ -292,7 +292,8 @@ const areaLayer = new GeoJSONLayer({
 
 const schoolLayer = new GeoJSONLayer({
   url:"Oxnehaga_school.geojson",
-  renderer: schoolIconRenderer, // Updated with icon
+  renderer: schoolIconRenderer,
+  elevationInfo: { mode: "on-the-ground" }, // Fix for 3D visibility
   outFields:["*"]
 });
 
@@ -334,13 +335,15 @@ const kindergartenLayer = new GeoJSONLayer({
 
 const schoolServiceLayer = new GeoJSONLayer({
   url:"Oxnehaga_school.geojson",
-  renderer: schoolIconRenderer, // Updated with icon
+  renderer: schoolIconRenderer,
+  elevationInfo: { mode: "on-the-ground" }, // Fix for 3D visibility
   outFields:["*"]
 });
 
 const busStopLayer = new GeoJSONLayer({
-  url:"Bus_stop.geojson.geojson", // Updated filename as requested
-  renderer: busRenderer,          // Updated with icon
+  url:"Bus_stop.geojson.geojson", // Filename matching your GitHub
+  renderer: busRenderer,
+  elevationInfo: { mode: "on-the-ground" }, // Fix for 3D visibility
   outFields:["*"]
 });
 
