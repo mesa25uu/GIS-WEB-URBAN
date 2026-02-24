@@ -118,21 +118,13 @@ require([
 ], function(Map, SceneView, GeoJSONLayer, Home) {
 
 const map = new Map({
-  basemap: "topo-vector",
-  ground: "world-elevation"
+  basemap:"topo-vector",
+  ground:"world-elevation"
 });
 
 const view = new SceneView({
-  container: "viewDiv",
-  map: map,
-  camera: {
-    position: {
-      longitude: 14.2622409,
-      latitude: 57.7781582,
-      z: 1200
-    },
-    tilt: 60   // overview but still 3D visible
-  },
+  container:"viewDiv",
+  map:map,
   popupEnabled:false
 });
 
@@ -149,11 +141,7 @@ const buildingRenderer = {
       type:"extrude",
       size:25,
       material:{ color:"#d9d9d9" },
-      edges:{
-        type:"solid",
-        color:"#888",
-        size:0.5
-      }
+      edges:{ type:"solid", color:"#888", size:0.5 }
     }]
   }
 };
@@ -192,6 +180,11 @@ const mainByggnad = new GeoJSONLayer({
   outFields:["*"]
 });
 
+const schoolLayer = new GeoJSONLayer({ url:"Oxnehaga_school.geojson", outFields:["*"] });
+const schoolRoute = new GeoJSONLayer({ url:"Oxnehaga_school_route.geojson", outFields:["*"] });
+const trainStation = new GeoJSONLayer({ url:"Huskvarna_train_station.geojson", outFields:["*"] });
+const trainLines = new GeoJSONLayer({ url:"train.geojson", outFields:["*"] });
+
 const distansLayer = new GeoJSONLayer({
   url:"Distans_from_centrum.geojson",
   visible:false,
@@ -199,20 +192,41 @@ const distansLayer = new GeoJSONLayer({
   outFields:["*"]
 });
 
-map.addMany([areaLayer, mainByggnad, distansLayer]);
+const vardcentralWalking = new GeoJSONLayer({
+  url:"Vardcentral_walking_distance.geojson",
+  outFields:["*"]
+});
+
+const kindergartenLayer = new GeoJSONLayer({ url:"Kinder_Garden.geojson", outFields:["*"] });
+const schoolServiceLayer = new GeoJSONLayer({ url:"Oxnehaga_school.geojson", outFields:["*"] });
+const busStopLayer = new GeoJSONLayer({ url:"Bus_stop.geojson", outFields:["*"] });
+
+map.addMany([
+  areaLayer,
+  mainByggnad,
+  schoolLayer,
+  schoolRoute,
+  trainStation,
+  trainLines,
+  distansLayer,
+  vardcentralWalking,
+  kindergartenLayer,
+  schoolServiceLayer,
+  busStopLayer
+]);
 
 
-// 🔥 AUTO ZOOM TO OXNEHAGA ON LOAD
-view.whenLayerView(areaLayer).then(function(){
-  view.goTo(areaLayer.fullExtent, {
-    tilt: 60
+// ✅ AUTO ZOOM TO OXNEHAGA AFTER LOAD
+areaLayer.when(() => {
+  view.goTo(areaLayer.fullExtent.expand(1.2), {
+    tilt:55
   });
 });
 
 
-// ---------------- SIMPLE DROPDOWN ----------------
+// ---------------- DROPDOWNS ----------------
 
-const controls = document.getElementById("controls");
+const controls=document.getElementById("controls");
 
 function createDropdown(title){
   const container=document.createElement("div");
@@ -220,7 +234,16 @@ function createDropdown(title){
 
   const header=document.createElement("div");
   header.className="dropdown-header";
-  header.innerHTML=title + "<span class='dropdown-arrow'>▶</span>";
+
+  const text=document.createElement("span");
+  text.innerText=title;
+
+  const arrow=document.createElement("span");
+  arrow.innerHTML="▶";
+  arrow.className="dropdown-arrow";
+
+  header.appendChild(text);
+  header.appendChild(arrow);
 
   const content=document.createElement("div");
   content.className="dropdown-content";
@@ -228,12 +251,13 @@ function createDropdown(title){
   header.onclick=()=>{
     const open=content.style.display==="block";
     content.style.display=open?"none":"block";
-    header.querySelector(".dropdown-arrow").style.transform=open?"rotate(0deg)":"rotate(90deg)";
+    arrow.style.transform=open?"rotate(0deg)":"rotate(90deg)";
   };
 
   container.appendChild(header);
   container.appendChild(content);
   controls.appendChild(container);
+
   return content;
 }
 
@@ -256,8 +280,17 @@ function addToggle(label,layer,parent){
 
 const general=createDropdown("General Information");
 addToggle("Area Boundary",areaLayer,general);
-addToggle("3D Buildings",mainByggnad,general);
-addToggle("Distance From Center",distansLayer,general);
+addToggle("Main Buildings (3D)",mainByggnad,general);
+
+const analys=createDropdown("Analys");
+addToggle("Route from school to train station",schoolRoute,analys);
+addToggle("Healthcare Walking Distance",vardcentralWalking,analys);
+addToggle("Distance From Center",distansLayer,analys);
+
+const services=createDropdown("Services");
+addToggle("Kindergarten",kindergartenLayer,services);
+addToggle("School",schoolServiceLayer,services);
+addToggle("Bus Stop",busStopLayer,services);
 
 });
 </script>
