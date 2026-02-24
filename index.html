@@ -50,10 +50,7 @@ html, body {
   font-weight:bold;
 }
 
-#infoContent {
-  padding:15px;
-  font-size:13px;
-}
+#infoContent { padding:15px; font-size:13px; }
 
 .layer-item {
   margin-bottom:8px;
@@ -64,13 +61,9 @@ html, body {
   border-radius:4px;
 }
 
-.layer-item input {
-  margin-right:10px;
-}
+.layer-item input { margin-right:10px; }
 
-.dropdown {
-  margin-bottom:10px;
-}
+.dropdown { margin-bottom:10px; }
 
 .dropdown-header {
   cursor:pointer;
@@ -80,29 +73,12 @@ html, body {
   border-radius:4px;
   display:flex;
   justify-content:space-between;
-  align-items:center;
 }
 
-.dropdown-arrow {
-  transition:0.3s;
-}
+.dropdown-content { display:none; margin-top:5px; padding-left:10px; }
 
-.dropdown-content {
-  display:none;
-  margin-top:5px;
-  padding-left:10px;
-}
-
-table {
-  width:100%;
-  border-collapse:collapse;
-}
-
-td {
-  padding:6px 4px;
-  border-bottom:1px solid #eee;
-  vertical-align:top;
-}
+table { width:100%; border-collapse:collapse; }
+td { padding:6px 4px; border-bottom:1px solid #eee; vertical-align:top; }
 
 .attr-key {
   font-weight:bold;
@@ -140,16 +116,16 @@ require([
 ], function(Map, SceneView, GeoJSONLayer, Home) {
 
 const map = new Map({
-  basemap: "topo-vector",
-  ground: "world-elevation"
+  basemap:"topo-vector",
+  ground:"world-elevation"
 });
 
 const view = new SceneView({
-  container: "viewDiv",
-  map: map,
-  camera: {
-    position: { longitude:14.2622409, latitude:57.7781582, z:5000 },
-    tilt:45
+  container:"viewDiv",
+  map:map,
+  camera:{
+    position:{ longitude:14.2622409, latitude:57.7781582, z:1200 },
+    tilt:60
   },
   popupEnabled:false
 });
@@ -158,6 +134,19 @@ view.ui.add(new Home({ view:view }), "top-left");
 
 
 // ---------------- RENDERERS ----------------
+
+const buildingRenderer = {
+  type:"simple",
+  symbol:{
+    type:"polygon-3d",
+    symbolLayers:[{
+      type:"extrude",
+      size:25,
+      material:{ color:"#d9d9d9" },
+      edges:{ type:"solid", color:"#888", size:0.5 }
+    }]
+  }
+};
 
 const areaRenderer = {
   type:"simple",
@@ -168,71 +157,8 @@ const areaRenderer = {
   }
 };
 
-const trainLineRenderer = {
-  type:"simple",
-  symbol:{
-    type:"simple-line",
-    color:"#ff0000",
-    width:4,
-    style:"dash"
-  }
-};
-
-const schoolRouteRenderer = {
-  type:"simple",
-  symbol:{
-    type:"simple-line",
-    color:"#8A2BE2",
-    width:5
-  }
-};
-
-const vardcentralRenderer = {
-  type:"simple",
-  symbol:{
-    type:"simple-fill",
-    color:[0,150,255,0.4],
-    outline:{ color:"#0096FF", width:2 }
-  }
-};
-
-const distanceRenderer = {
-  type:"simple",
-  symbol:{
-    type:"simple-fill",
-    color:[255,165,0,0.3],
-    outline:{
-      color:[255,140,0],
-      width:2
-    }
-  }
-};
-
 
 // ---------------- LAYERS ----------------
-
-// 3D BUILDINGS RESTORED
-const mainByggnad = new GeoJSONLayer({
-  url:"Main_byggnad.geojson",
-  elevationInfo:{ mode:"on-the-ground" },
-  renderer:{
-    type:"simple",
-    symbol:{
-      type:"polygon-3d",
-      symbolLayers:[{
-        type:"extrude",
-        size:20,
-        material:{ color:"#d9d9d9" },
-        edges:{
-          type:"solid",
-          color:"#888",
-          size:0.6
-        }
-      }]
-    }
-  },
-  outFields:["*"]
-});
 
 const areaLayer = new GeoJSONLayer({
   url:"Oxnehaga-Area.geojson",
@@ -240,14 +166,29 @@ const areaLayer = new GeoJSONLayer({
   outFields:["*"]
 });
 
+const mainBuilding3D = new GeoJSONLayer({
+  url:"Main_byggnad.geojson",
+  elevationInfo:{ mode:"on-the-ground" },
+  renderer:buildingRenderer,
+  outFields:["*"]
+});
+
 const schoolLayer = new GeoJSONLayer({
   url:"Oxnehaga_school.geojson",
+  renderer:{
+    type:"simple",
+    symbol:{
+      type:"picture-marker",
+      url:"https://static.arcgis.com/images/Symbols/Shapes/School.png",
+      width:"24px",
+      height:"24px"
+    }
+  },
   outFields:["*"]
 });
 
 const schoolRoute = new GeoJSONLayer({
   url:"Oxnehaga_school_route.geojson",
-  renderer:schoolRouteRenderer,
   outFields:["*"]
 });
 
@@ -258,31 +199,49 @@ const trainStation = new GeoJSONLayer({
 
 const trainLines = new GeoJSONLayer({
   url:"train.geojson",
-  renderer:trainLineRenderer,
   outFields:["*"]
 });
 
 const distansLayer = new GeoJSONLayer({
   url:"Distans_from_centrum.geojson",
   visible:false,
-  renderer:distanceRenderer,
   outFields:["*"]
 });
 
+// 🟢 LIGHT GREEN WALKING DISTANCE
 const vardcentralWalking = new GeoJSONLayer({
   url:"Vardcentral_walking_distance.geojson",
-  renderer:vardcentralRenderer,
+  renderer:{
+    type:"simple",
+    symbol:{
+      type:"simple-fill",
+      color:[144,238,144,0.35],
+      outline:{
+        color:[34,139,34],
+        width:2
+      }
+    }
+  },
   outFields:["*"]
 });
 
-// SERVICES
+// 🏥 HOSPITAL ICON
+const vardcentralLayer = new GeoJSONLayer({
+  url:"Vardcentral.geojson",
+  renderer:{
+    type:"simple",
+    symbol:{
+      type:"picture-marker",
+      url:"https://static.arcgis.com/images/Symbols/Shapes/Hospital.png",
+      width:"26px",
+      height:"26px"
+    }
+  },
+  outFields:["*"]
+});
+
 const kindergartenLayer = new GeoJSONLayer({
   url:"Kinder_Garden.geojson",
-  outFields:["*"]
-});
-
-const schoolServiceLayer = new GeoJSONLayer({
-  url:"Oxnehaga_school.geojson",
   outFields:["*"]
 });
 
@@ -293,22 +252,22 @@ const busStopLayer = new GeoJSONLayer({
 
 map.addMany([
   areaLayer,
-  mainByggnad,
+  mainBuilding3D,
   schoolLayer,
   schoolRoute,
   trainStation,
   trainLines,
   distansLayer,
   vardcentralWalking,
+  vardcentralLayer,
   kindergartenLayer,
-  schoolServiceLayer,
   busStopLayer
 ]);
 
 
-// ---------------- DROPDOWN UI ----------------
+// ---------------- DROPDOWNS ----------------
 
-const controls = document.getElementById("controls");
+const controls=document.getElementById("controls");
 
 function createDropdown(title){
   const container=document.createElement("div");
@@ -316,24 +275,14 @@ function createDropdown(title){
 
   const header=document.createElement("div");
   header.className="dropdown-header";
-
-  const text=document.createElement("span");
-  text.innerText=title;
-
-  const arrow=document.createElement("span");
-  arrow.innerHTML="▶";
-  arrow.className="dropdown-arrow";
-
-  header.appendChild(text);
-  header.appendChild(arrow);
+  header.innerHTML=title;
 
   const content=document.createElement("div");
   content.className="dropdown-content";
 
   header.onclick=()=>{
-    const open=content.style.display==="block";
-    content.style.display=open?"none":"block";
-    arrow.style.transform=open?"rotate(0deg)":"rotate(90deg)";
+    content.style.display=
+      content.style.display==="block"?"none":"block";
   };
 
   container.appendChild(header);
@@ -343,14 +292,14 @@ function createDropdown(title){
   return content;
 }
 
-function addToggle(label,layers,parent){
+function addToggle(label,layer,parent){
   const div=document.createElement("div");
   div.className="layer-item";
 
   const chk=document.createElement("input");
   chk.type="checkbox";
-  chk.checked=layers.every(l=>l.visible);
-  chk.onchange=(e)=>layers.forEach(l=>l.visible=e.target.checked);
+  chk.checked=true;
+  chk.onchange=()=>layer.visible=chk.checked;
 
   const span=document.createElement("span");
   span.innerText=label;
@@ -361,60 +310,24 @@ function addToggle(label,layers,parent){
 }
 
 
-// DROPDOWNS
-const generalGroup=createDropdown("General Information");
-addToggle("Area Boundary",[areaLayer],generalGroup);
-addToggle("Main Buildings",[mainByggnad],generalGroup);
-addToggle("Train Info",[trainStation,trainLines],generalGroup);
+// GENERAL
+const general=createDropdown("General Information");
+addToggle("Area Boundary",areaLayer,general);
+addToggle("Main_Building_3D",mainBuilding3D,general);
+addToggle("Train Station",trainStation,general);
 
+// ANALYSIS
+const analys=createDropdown("Analys");
+addToggle("Route from school to train station",schoolRoute,analys);
+addToggle("Healthcare Walking Distance",vardcentralWalking,analys);
+addToggle("Distance From Center",distansLayer,analys);
 
-
-const analysGroup=createDropdown("Analys");
-addToggle("Route from school to train station",[schoolLayer,schoolRoute],analysGroup);
-addToggle("Healthcare Walking Distance",[vardcentralWalking],analysGroup);
-addToggle("Distance From Center",[distansLayer],analysGroup);
-
-
-
-const servicesGroup=createDropdown("Services");
-addToggle("Kindergarten",[kindergartenLayer],servicesGroup);
-addToggle("School",[schoolServiceLayer],servicesGroup);
-addToggle("Bus Stop",[busStopLayer],servicesGroup);
-
-
-// ATTRIBUTE DISPLAY
-
-view.on("click",function(event){
-  view.hitTest(event).then(function(response){
-
-    const results=response.results.filter(r =>
-      r.graphic &&
-      r.graphic.layer &&
-      r.graphic.layer.type==="geojson"
-    );
-
-    if(results.length>0){
-
-      let attr=results[0].graphic.attributes;
-      let tableHTML="<table>";
-
-      for(let key in attr){
-        tableHTML+=`
-          <tr>
-            <td class="attr-key">${key}</td>
-            <td>${attr[key]}</td>
-          </tr>`;
-      }
-
-      tableHTML+="</table>";
-      document.getElementById("infoContent").innerHTML=tableHTML;
-
-    } else {
-      document.getElementById("infoContent").innerHTML="No feature selected.";
-    }
-
-  });
-});
+// SERVICES
+const services=createDropdown("Services");
+addToggle("School",schoolLayer,services);
+addToggle("Kindergarten",kindergartenLayer,services);
+addToggle("Bus Stop",busStopLayer,services);
+addToggle("Healthcare Center",vardcentralLayer,services);
 
 });
 </script>
