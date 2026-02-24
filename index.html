@@ -64,13 +64,9 @@ html, body {
   border-radius:4px;
 }
 
-.layer-item input {
-  margin-right:10px;
-}
+.layer-item input { margin-right:10px; }
 
-.dropdown {
-  margin-bottom:10px;
-}
+.dropdown { margin-bottom:10px; }
 
 .dropdown-header {
   cursor:pointer;
@@ -83,25 +79,12 @@ html, body {
   align-items:center;
 }
 
-.dropdown-arrow {
-  transition:0.3s;
-}
+.dropdown-arrow { transition:0.3s; }
 
 .dropdown-content {
   display:none;
   margin-top:5px;
   padding-left:10px;
-}
-
-table {
-  width:100%;
-  border-collapse:collapse;
-}
-
-td {
-  padding:6px 4px;
-  border-bottom:1px solid #eee;
-  vertical-align:top;
 }
 
 .attr-key {
@@ -110,17 +93,6 @@ td {
   width:45%;
   font-size:11px;
   text-transform:uppercase;
-}
-
-#project4Btn {
-  width:100%;
-  padding:8px;
-  background:#4A90E2;
-  color:#fff;
-  border:none;
-  border-radius:4px;
-  cursor:pointer;
-  margin-bottom:15px;
 }
 </style>
 </head>
@@ -152,15 +124,15 @@ require([
 ], function(Map, SceneView, GeoJSONLayer, Home) {
 
 const map = new Map({
-  basemap: "topo-vector",
-  ground: "world-elevation"
+  basemap:"topo-vector",
+  ground:"world-elevation"
 });
 
 const view = new SceneView({
-  container: "viewDiv",
-  map: map,
-  camera: {
-    position: { longitude:14.2622409, latitude:57.7781582, z:5000 },
+  container:"viewDiv",
+  map:map,
+  camera:{
+    position:{ longitude:14.2622409, latitude:57.7781582, z:5000 },
     tilt:45
   },
   popupEnabled:false
@@ -169,184 +141,26 @@ const view = new SceneView({
 view.ui.add(new Home({ view:view }), "top-left");
 
 
-// ---------------- RENDERERS ----------------
+// ---------------- BUS STOP WITH BUS ICON ----------------
 
-const areaRenderer = {
-  type:"simple",
-  symbol:{
-    type:"simple-fill",
-    color:[0,0,0,0],
-    outline:{ color:"#00aa00", width:3 }
-
-
-
-
-  }
-};
-
-const trainLineRenderer = {
-  type:"simple",
-  symbol:{
-    type:"simple-line",
-    color:"#ff0000",
-    width:4,
-    style:"dash"
-  }
-};
-
-const schoolRouteRenderer = {
-  type:"simple",
-  symbol:{
-    type:"simple-line",
-    color:"#8A2BE2",
-    width:5
-  }
-};
-
-const vardcentralRenderer = {
-  type:"simple",
-  symbol:{
-    type:"simple-fill",
-    color:[0,200,0,0.35],
-    outline:{ color:[0,150,0], width:2 }
-  }
-};
-
-const distanceRenderer = {
-  type:"simple",
-  symbol:{
-    type:"simple-fill",
-    color:[255,165,0,0.3],
-    outline:{
-      color:[255,140,0],
-      width:2
-    }
-  }
-};
-
-
-// ---------------- LAYERS ----------------
-
-// 3D BUILDINGS RESTORED
-const mainByggnad = new GeoJSONLayer({
-  url:"Main_byggnad.geojson",
-  elevationInfo:{ mode:"on-the-ground" },
+const busStopLayer = new GeoJSONLayer({
+  url:"Bus_stop.geojson.geojson",
   renderer:{
-    type:"unique-value",
-    field:"objektidentitet",
-    defaultSymbol:{
-      type:"polygon-3d",
-      symbolLayers:[{
-        type:"extrude",
-        size:2,
-        material:{ color:"#d9d9d9" },
-        edges:{
-          type:"solid",
-          color:"#888",
-          size:0.6
-        }
-      }]
-    },
-    uniqueValueInfos:[{
-      value:"86068c15-afde-4284-90fc-ad8735b25416",
-      symbol:{
-        type:"polygon-3d",
-        symbolLayers:[{
-          type:"extrude",
-          size:2,
-          material:{ color:"#ff0000" },
-          edges:{
-            type:"solid",
-            color:"#888",
-            size:0.6
-          }
-        }]
-      }
-    }]
+    type:"simple",
+    symbol:{
+      type:"picture-marker",
+      url:"https://static.arcgis.com/images/Symbols/Transportation/BusStop.png",
+      width:"26px",
+      height:"26px"
+    }
   },
   outFields:["*"]
 });
 
-const areaLayer = new GeoJSONLayer({
-  url:"Oxnehaga-Area.geojson",
-  renderer:areaRenderer,
-  outFields:["*"]
-});
 
-const schoolLayer = new GeoJSONLayer({
-  url:"Oxnehaga_school.geojson",
-
-
-  outFields:["*"]
-});
-
-const schoolRoute = new GeoJSONLayer({
-  url:"Oxnehaga_school_route.geojson",
-  renderer:schoolRouteRenderer,
-  outFields:["*"]
-});
-
-const trainStation = new GeoJSONLayer({
-  url:"Huskvarna_train_station.geojson",
-  outFields:["*"]
-});
-
-const trainLines = new GeoJSONLayer({
-  url:"train.geojson",
-  renderer:trainLineRenderer,
-  outFields:["*"]
-});
-
-const distansLayer = new GeoJSONLayer({
-  url:"Distans_from_centrum.geojson",
-  visible:false,
-  renderer:distanceRenderer,
-  outFields:["*"]
-});
-
-const vardcentralWalking = new GeoJSONLayer({
-  url:"Vardcentral_walking_distance.geojson",
-  renderer:vardcentralRenderer,
-  outFields:["*"]
-});
-
-// SERVICES
-const kindergartenLayer = new GeoJSONLayer({
-  url:"Kinder_Garden.geojson",
-  outFields:["*"]
-});
-
-const schoolServiceLayer = new GeoJSONLayer({
-  url:"Oxnehaga_school.geojson",
-  outFields:["*"]
-});
-
-const busStopLayer = new GeoJSONLayer({
-  url:"Bus_stop.geojson",
-  outFields:["*"]
-});
-
-map.addMany([
-  areaLayer,
-  mainByggnad,
-  schoolLayer,
-  schoolRoute,
-  trainStation,
-  trainLines,
-  distansLayer,
-  vardcentralWalking,
-  kindergartenLayer,
-  schoolServiceLayer,
-  busStopLayer
-]);
-
-
-// ---------------- DROPDOWN UI ----------------
+// ---------------- SERVICES MENU ----------------
 
 const controls = document.getElementById("controls");
-document.getElementById("project4Btn").onclick = function(){
-  window.location.href = "Project4.html";
-};
 
 function createDropdown(title){
   const container=document.createElement("div");
@@ -387,7 +201,7 @@ function addToggle(label,layers,parent){
 
   const chk=document.createElement("input");
   chk.type="checkbox";
-  chk.checked=layers.every(l=>l.visible);
+  chk.checked=true;
   chk.onchange=(e)=>layers.forEach(l=>l.visible=e.target.checked);
 
   const span=document.createElement("span");
@@ -398,66 +212,17 @@ function addToggle(label,layers,parent){
   parent.appendChild(div);
 }
 
-
-// DROPDOWNS
-const generalGroup=createDropdown("General Information");
-addToggle("Area Boundary",[areaLayer],generalGroup);
-addToggle("Main Buildings",[mainByggnad],generalGroup);
-addToggle("Train Info",[trainStation,trainLines],generalGroup);
-
-
-
-
-
-
-
-
-const analysGroup=createDropdown("Analys");
-addToggle("Route from school to train station",[schoolLayer,schoolRoute],analysGroup);
-addToggle("Healthcare Walking Distance",[vardcentralWalking],analysGroup);
-addToggle("Distance From Center",[distansLayer],analysGroup);
-
-
-
 const servicesGroup=createDropdown("Services");
-addToggle("Kindergarten",[kindergartenLayer],servicesGroup);
-addToggle("School",[schoolServiceLayer],servicesGroup);
 addToggle("Bus Stop",[busStopLayer],servicesGroup);
 
+map.add(busStopLayer);
 
-// ATTRIBUTE DISPLAY
 
-view.on("click",function(event){
-  view.hitTest(event).then(function(response){
+// ---------------- BUTTON ----------------
 
-    const results=response.results.filter(r =>
-      r.graphic &&
-      r.graphic.layer &&
-      r.graphic.layer.type==="geojson"
-    );
-
-    if(results.length>0){
-
-      let attr=results[0].graphic.attributes;
-      let tableHTML="<table>";
-
-      for(let key in attr){
-        tableHTML+=`
-          <tr>
-            <td class="attr-key">${key}</td>
-            <td>${attr[key]}</td>
-          </tr>`;
-      }
-
-      tableHTML+="</table>";
-      document.getElementById("infoContent").innerHTML=tableHTML;
-
-    } else {
-      document.getElementById("infoContent").innerHTML="No feature selected.";
-    }
-
-  });
-});
+document.getElementById("project4Btn").onclick = function(){
+  window.location.href = "Project4.html";
+};
 
 });
 </script>
