@@ -26,6 +26,7 @@ html, body {
 #viewDiv {
   flex:1;
   height:100vh;
+  position:relative;
 }
 
 .layer-item {
@@ -112,7 +113,18 @@ view.ui.add(new Home({ view:view }), "top-left");
 
 // ---------------- RENDERERS ----------------
 
-// 3D Buildings (2m height + one red)
+const vardcentralRenderer = {
+  type:"simple",
+  symbol:{
+    type:"simple-fill",
+    color:[0,200,0,0.35],
+    outline:{ color:[0,150,0], width:2 }
+  }
+};
+
+
+// ---------------- MAIN BUILDING WITH RED ONE ----------------
+
 const mainByggnad = new GeoJSONLayer({
   url:"Main_byggnad.geojson",
   elevationInfo:{ mode:"on-the-ground" },
@@ -144,17 +156,12 @@ const mainByggnad = new GeoJSONLayer({
   outFields:["*"]
 });
 
-// Healthcare Walking Distance (Green)
+
+// ---------------- OTHER LAYERS ----------------
+
 const vardcentralWalking = new GeoJSONLayer({
   url:"Vardcentral_walking_distance.geojson",
-  renderer:{
-    type:"simple",
-    symbol:{
-      type:"simple-fill",
-      color:[0,200,0,0.35],
-      outline:{ color:[0,150,0], width:2 }
-    }
-  },
+  renderer:vardcentralRenderer,
   outFields:["*"]
 });
 
@@ -162,67 +169,6 @@ map.addMany([
   mainByggnad,
   vardcentralWalking
 ]);
-
-
-// ---------------- DROPDOWN UI ----------------
-
-const controls = document.getElementById("controls");
-
-function createDropdown(title){
-  const container=document.createElement("div");
-  container.className="dropdown";
-
-  const header=document.createElement("div");
-  header.className="dropdown-header";
-
-  const text=document.createElement("span");
-  text.innerText=title;
-
-  const arrow=document.createElement("span");
-  arrow.innerHTML="▶";
-  arrow.className="dropdown-arrow";
-
-  header.appendChild(text);
-  header.appendChild(arrow);
-
-  const content=document.createElement("div");
-  content.className="dropdown-content";
-
-  header.onclick=()=>{
-    const open=content.style.display==="block";
-    content.style.display=open?"none":"block";
-    arrow.style.transform=open?"rotate(0deg)":"rotate(90deg)";
-  };
-
-  container.appendChild(header);
-  container.appendChild(content);
-  controls.appendChild(container);
-
-  return content;
-}
-
-function addToggle(label,layers,parent){
-  const div=document.createElement("div");
-  div.className="layer-item";
-
-  const chk=document.createElement("input");
-  chk.type="checkbox";
-  chk.checked=layers.every(l=>l.visible);
-  chk.onchange=(e)=>layers.forEach(l=>l.visible=e.target.checked);
-
-  const span=document.createElement("span");
-  span.innerText=label;
-
-  div.appendChild(chk);
-  div.appendChild(span);
-  parent.appendChild(div);
-}
-
-const generalGroup=createDropdown("General Information");
-addToggle("Main Buildings",[mainByggnad],generalGroup);
-
-const analysGroup=createDropdown("Analys");
-addToggle("Healthcare Walking Distance",[vardcentralWalking],analysGroup);
 
 
 // ---------------- POPUP LOGIC ----------------
@@ -238,13 +184,13 @@ view.on("click", function(event){
     if(result){
 
       const attr = result.graphic.attributes;
-      let content = "";
+      let content = "<b>Building Information</b><br><br>";
 
       for(let key in attr){
         content += "<b>"+key+"</b>: "+attr[key]+"<br>";
       }
 
-      // Show button ONLY for this objektidentitet
+      // Add button ONLY for that specific building
       if(attr.objektidentitet === "86068c15-afde-4284-90fc-ad8735b25416"){
         content += `
           <button class="popup-btn"
@@ -255,7 +201,7 @@ view.on("click", function(event){
       }
 
       view.popup.open({
-        title:"Building Information",
+        title:"Main Building",
         content:content,
         location:event.mapPoint
       });
