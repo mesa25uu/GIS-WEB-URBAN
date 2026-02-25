@@ -57,10 +57,9 @@ require([
         latitude: 57.77399384782479,
         z: 5000
       },
-      tilt: 7
+      tilt: 0
     }
   });
-
 
   view.ui.add(new Home({ view: view }), "top-left");
 
@@ -194,7 +193,80 @@ require([
   addToggle("School",[schoolServiceLayer],servicesGroup);
   addToggle("Bus Stop",[busStopLayer],servicesGroup);
 
-  // ---------------- HIT TEST ----------------
+  // ---------------- MOVE "OPEN PROJECT 4" INTO THE POPUP (header + top content) ----------------
+  const TARGET_OID = "86068c15-afde-4284-90fc-ad8735b25416";
+
+  // Header action (appears at the very top of the popup)
+  const project4Action = {
+    title: "Open Project 4",
+    id: "open-project-4",
+    className: "esri-icon-launch-link-external"
+  };
+
+  // Popup content with inline button at the top (for the matching feature only)
+  mainByggnad.popupTemplate = {
+    title: "Building details",
+    outFields: ["*"],
+    content: (e) => {
+      const g = e.graphic;
+      const attr = g.attributes || {};
+      const isTarget = (attr.objektidentitet === TARGET_OID);
+
+      let html = "";
+      if (isTarget) {
+        // Inline button at the top of popup content
+        html += '<a href="Project4.html" style="display:inline-block;padding:8px 12px;margin:0 0 10px 0;border-radius:4px;background:#4A90E2;color:#fff;text-decoration:none;font-size:12px;font-weight:600;">Open Project 4</a>';
+      }
+
+      // Attributes table
+      html += "<table>";
+      for (const k in attr) {
+        html += `<tr><td class="attr-key">${k}</td><td>${attr[k]}</td></tr>`;
+      }
+      html += "</table>";
+      return html;
+    }
+  };
+
+  // Show the header action only for the matching feature
+  view.popup.watch("selectedFeature", (g) => {
+    if (g && g.layer === mainByggnad) {
+      const isTarget = g.getAttribute && g.getAttribute("objektidentitet") === TARGET_OID;
+      view.popup.actions.removeAll();
+      if (isTarget) {
+        view.popup.actions.add(project4Action);
+      }
+    } else {
+      view.popup.actions.removeAll();
+    }
+  });
+
+  // Handle header action click
+  view.popup.on("trigger-action", (event) => {
+    if (event.action.id === "open-project-4") {
+      window.location.href = "Project4.html"; // or window.open("Project4.html", "_blank");
+    }
+  });
+
+  // ---------------- OPTION 2: AUTO-OPEN POPUP FOR THAT BUILDING ON STARTUP ----------------
+  view.when(async () => {
+    try {
+      await mainByggnad.when();
+      const q = mainByggnad.createQuery();
+      q.where = `objektidentitet='${TARGET_OID}'`;
+      q.outFields = ["*"];
+      const { features } = await mainByggnad.queryFeatures(q);
+      if (features && features.length) {
+        const g = features[0];
+        // Open popup (camera already set to your desired position/height)
+        view.popup.open({ features: [g], location: g.geometry });
+      }
+    } catch (e) {
+      console.warn("Could not auto-open Project 4 popup:", e);
+    }
+  });
+
+  // ---------------- HIT TEST (kept as-is) ----------------
   view.on("click", (event) => {
     view.hitTest(event).then((response) => {
       const results = response.results.filter(r => r.graphic && r.graphic.layer && r.graphic.layer.type==="geojson");
@@ -214,8 +286,3 @@ require([
 </script>
 </body>
 </html>
-
-
-  
-
-
