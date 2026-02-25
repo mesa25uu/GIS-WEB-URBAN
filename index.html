@@ -102,7 +102,7 @@ const distansLayer = new GeoJSONLayer({ url:"Distans_from_centrum.geojson", visi
 const vardcentralWalking = new GeoJSONLayer({ url:"Vardcentral_walking_distance.geojson", renderer:vardcentralRenderer, outFields:["*"] });
 const kindergartenLayer = new GeoJSONLayer({ url:"Kinder_Garden.geojson", outFields:["*"] });
 const schoolServiceLayer = new GeoJSONLayer({ url:"Oxnehaga_school.geojson", renderer: schoolIconRenderer, elevationInfo: { mode: "on-the-ground" }, outFields:["*"] });
-const busStopLayer = new GeoJSONLayer({ url:"Bus_stop.geojson.geojson", renderer: busRenderer, elevationInfo: { mode: "on-the-ground" }, outFields:["*"] });
+const busStopLayer = new GeoJSONLayer({ url:"Bus_stop.geojson", renderer: busRenderer, elevationInfo: { mode: "on-the-ground" }, outFields:["*"] });
 
 map.addMany([areaLayer, mainByggnad, schoolLayer, schoolRoute, trainStation, trainLines, distansLayer, vardcentralWalking, kindergartenLayer, schoolServiceLayer, busStopLayer]);
 
@@ -169,3 +169,4 @@ view.on("click", (event) => {
 </script>
 </body>
 </html>
+
