@@ -35,7 +35,7 @@ td { padding:6px 4px; border-bottom:1px solid #eee; vertical-align:top; }
 <div id="viewDiv">
   <div id="infoPanel">
     <div class="info-header">Feature Details</div>
-    <button id="project4Btn">Open Project 4</button>
+    <button id="project4Btn" style="display:none;">Open Project 4</button>
     <div id="infoContent">Click on a feature to see all attributes.</div>
   </div>
 </div>
@@ -192,11 +192,18 @@ require([
       const results = response.results.filter(r => r.graphic && r.graphic.layer && r.graphic.layer.type==="geojson");
       if(results.length > 0){
         let attr = results[0].graphic.attributes;
+        const project4Btn = document.getElementById("project4Btn");
+        if (attr && attr.objektidentitet === "86068c15-afde-4284-90fc-ad8735b25416") {
+          project4Btn.style.display = "";
+        } else {
+          project4Btn.style.display = "none";
+        }
         let tableHTML = "<table>";
         for(let key in attr){ tableHTML += `<tr><td class="attr-key">${key}</td><td>${attr[key]}</td></tr>`; }
         tableHTML += "</table>";
         document.getElementById("infoContent").innerHTML = tableHTML;
       } else {
+        document.getElementById("project4Btn").style.display = "none";
         document.getElementById("infoContent").innerHTML = "No feature selected.";
       }
     });
