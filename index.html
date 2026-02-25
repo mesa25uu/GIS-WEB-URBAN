@@ -21,7 +21,14 @@ html, body { height:100%; width:100%; margin:0; padding:0; display:flex; font-fa
 table { width:100%; border-collapse:collapse; }
 td { padding:6px 4px; border-bottom:1px solid #eee; vertical-align:top; }
 .attr-key { font-weight:bold; color:#666; width:45%; font-size:11px; text-transform:uppercase; }
-#project4Btn { width:100%; padding:8px; background:#4A90E2; color:#fff; border:none; border-radius:4px; cursor:pointer; margin-bottom:15px; }
+
+/* Popup button */
+.btn-inline {
+  display:inline-block; padding:8px 12px; margin-bottom:10px;
+  border-radius:4px; background:#4A90E2; color:#fff; text-decoration:none;
+  font-size:12px; font-weight:600;
+}
+.btn-inline:hover { background:#357ac8; }
 </style>
 </head>
 
@@ -29,7 +36,7 @@ td { padding:6px 4px; border-bottom:1px solid #eee; vertical-align:top; }
 <div id="sidePanel">
   <h2 style="color:#4A90E2;margin:0;">GIS Web Urban</h2>
   <hr style="opacity:0.2;margin:15px 0;">
-  <button id="project4Btn">Open Project 4</button>
+  <!-- BUTTON REMOVED AS REQUESTED -->
   <div id="controls"></div>
 </div>
 
@@ -53,23 +60,22 @@ require([
     popupEnabled: true,
     camera: {
       position: {
-        longitude: 14.263729901331324,
-        latitude: 57.77399384782479,
-        z: 5000
+        longitude: 14.262351248852866,
+        latitude: 57.77795564556115,
+        z: 3500
       },
-      tilt: 0
+      tilt: 45
     }
   });
 
   view.ui.add(new Home({ view: view }), "top-left");
 
   // ---------------- RENDERERS ----------------
-  // Option A: robust simple marker (no external icon)
   const busRenderer = {
     type: "simple",
     symbol: {
       type: "simple-marker",
-      color: "#FFD21E",                // yellow
+      color: "#FFD21E",
       size: 11,
       style: "circle",
       outline: { color: "#1b1b1b", width: 1.5 }
@@ -129,10 +135,8 @@ require([
   const vardcentralWalking = new GeoJSONLayer({ url: "Vardcentral_walking_distance.geojson", renderer: vardcentralRenderer, outFields: ["*"] });
   const kindergartenLayer = new GeoJSONLayer({ url: "Kinder_Garden.geojson", outFields: ["*"] });
   const schoolServiceLayer = new GeoJSONLayer({ url: "Oxnehaga_school.geojson", renderer: schoolIconRenderer, elevationInfo: { mode: "on-the-ground" }, outFields: ["*"] });
-
-  // Bus stop layer using simple marker
   const busStopLayer = new GeoJSONLayer({
-    url: "Bus_stop.geojson",                 // ensure path/case matches your repo
+    url: "Bus_stop.geojson",
     renderer: busRenderer,
     elevationInfo: { mode: "on-the-ground" },
     outFields: ["*"]
@@ -144,66 +148,9 @@ require([
     kindergartenLayer, schoolServiceLayer, busStopLayer
   ]);
 
-  // Optional diagnostics to confirm bus features are loading
-  busStopLayer.when(() => {
-    return busStopLayer.queryFeatureCount();
-  }).then(c => console.log("[Bus] feature count:", c))
-    .catch(err => console.error("[Bus] load error:", err));
-
-  // ---------------- UI & TOGGLES ----------------
-  const controls = document.getElementById("controls");
-  document.getElementById("project4Btn").onclick = () => { window.location.href = "Project4.html"; };
-
-  function createDropdown(title){
-    const container=document.createElement("div"); container.className="dropdown";
-    const header=document.createElement("div"); header.className="dropdown-header";
-    const text=document.createElement("span"); text.innerText=title;
-    const arrow=document.createElement("span"); arrow.innerHTML="▶"; arrow.className="dropdown-arrow";
-    header.appendChild(text); header.appendChild(arrow);
-    const content=document.createElement("div"); content.className="dropdown-content";
-    header.onclick=()=>{
-      const open=content.style.display==="block";
-      content.style.display=open?"none":"block";
-      arrow.style.transform=open?"rotate(0deg)":"rotate(90deg)";
-    };
-    container.appendChild(header); container.appendChild(content); controls.appendChild(container);
-    return content;
-  }
-
-  function addToggle(label,layers,parent){
-    const div=document.createElement("div"); div.className="layer-item";
-    const chk=document.createElement("input"); chk.type="checkbox"; chk.checked=layers.every(l=>l.visible);
-    chk.onchange=(e)=>layers.forEach(l=>l.visible=e.target.checked);
-    const span=document.createElement("span"); span.innerText=label;
-    div.appendChild(chk); div.appendChild(span); parent.appendChild(div);
-  }
-
-  const generalGroup=createDropdown("General Information");
-  addToggle("Area Boundary",[areaLayer],generalGroup);
-  addToggle("Main Buildings",[mainByggnad],generalGroup);
-  addToggle("Train Info",[trainStation,trainLines],generalGroup);
-
-  const analysGroup=createDropdown("Analys");
-  addToggle("Route from school to train station",[schoolLayer,schoolRoute],analysGroup);
-  addToggle("Healthcare Walking Distance",[vardcentralWalking],analysGroup);
-  addToggle("Distance From Center",[distansLayer],analysGroup);
-
-  const servicesGroup=createDropdown("Services");
-  addToggle("Kindergarten",[kindergartenLayer],servicesGroup);
-  addToggle("School",[schoolServiceLayer],servicesGroup);
-  addToggle("Bus Stop",[busStopLayer],servicesGroup);
-
-  // ---------------- MOVE "OPEN PROJECT 4" INTO THE POPUP (header + top content) ----------------
+  // ---------------- POPUP BUTTON ----------------
   const TARGET_OID = "86068c15-afde-4284-90fc-ad8735b25416";
 
-  // Header action (appears at the very top of the popup)
-  const project4Action = {
-    title: "Open Project 4",
-    id: "open-project-4",
-    className: "esri-icon-launch-link-external"
-  };
-
-  // Popup content with inline button at the top (for the matching feature only)
   mainByggnad.popupTemplate = {
     title: "Building details",
     outFields: ["*"],
@@ -214,11 +161,9 @@ require([
 
       let html = "";
       if (isTarget) {
-        // Inline button at the top of popup content
-        html += '<a href="Project4.html" style="display:inline-block;padding:8px 12px;margin:0 0 10px 0;border-radius:4px;background:#4A90E2;color:#fff;text-decoration:none;font-size:12px;font-weight:600;">Open Project 4</a>';
+        html += '<a href="Project4.html" target="_blank" rel="noopener noreferrer" class="btn-inline">Open Project 4</a>';
       }
 
-      // Attributes table
       html += "<table>";
       for (const k in attr) {
         html += `<tr><td class="attr-key">${k}</td><td>${attr[k]}</td></tr>`;
@@ -228,45 +173,7 @@ require([
     }
   };
 
-  // Show the header action only for the matching feature
-  view.popup.watch("selectedFeature", (g) => {
-    if (g && g.layer === mainByggnad) {
-      const isTarget = g.getAttribute && g.getAttribute("objektidentitet") === TARGET_OID;
-      view.popup.actions.removeAll();
-      if (isTarget) {
-        view.popup.actions.add(project4Action);
-      }
-    } else {
-      view.popup.actions.removeAll();
-    }
-  });
-
-  // Handle header action click
-  view.popup.on("trigger-action", (event) => {
-    if (event.action.id === "open-project-4") {
-      window.location.href = "Project4.html"; // or window.open("Project4.html", "_blank");
-    }
-  });
-
-  // ---------------- OPTION 2: AUTO-OPEN POPUP FOR THAT BUILDING ON STARTUP ----------------
-  view.when(async () => {
-    try {
-      await mainByggnad.when();
-      const q = mainByggnad.createQuery();
-      q.where = `objektidentitet='${TARGET_OID}'`;
-      q.outFields = ["*"];
-      const { features } = await mainByggnad.queryFeatures(q);
-      if (features && features.length) {
-        const g = features[0];
-        // Open popup (camera already set to your desired position/height)
-        view.popup.open({ features: [g], location: g.geometry });
-      }
-    } catch (e) {
-      console.warn("Could not auto-open Project 4 popup:", e);
-    }
-  });
-
-  // ---------------- HIT TEST (kept as-is) ----------------
+  // ---------------- HIT TEST ----------------
   view.on("click", (event) => {
     view.hitTest(event).then((response) => {
       const results = response.results.filter(r => r.graphic && r.graphic.layer && r.graphic.layer.type==="geojson");
