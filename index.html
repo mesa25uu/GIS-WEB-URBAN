@@ -53,13 +53,21 @@
       "esri/Map", "esri/views/SceneView", "esri/layers/GeoJSONLayer", "esri/widgets/Home"
     ], function(Map, SceneView, GeoJSONLayer, Home) {
 
-      const map = new Map({ basemap: "topo-vector", ground: "world-elevation" });
+      //const map = new Map({ basemap: "topo-vector", ground: "world-elevation" });
       const view = new SceneView({
         container: "viewDiv",
         map: map,
-        camera: { position: { longitude:14.2622409, latitude:57.7781582, z:5000 }, tilt:45 },
-        popupEnabled: true  // <-- enable popups
+        popupEnabled: true,
+        camera: {
+          position: {
+            longitude: 14.262351248852866,
+            latitude: 57.77795564556115,
+            z: 3500
+          },
+          tilt: 45
+        }
       });
+
 
       view.ui.add(new Home({ view:view }), "top-left");
 
@@ -234,3 +242,4 @@
   </script>
 </body>
 </html>
+
