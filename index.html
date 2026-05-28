@@ -198,66 +198,63 @@ require([
 
   view.ui.add(new Home({ view: view }), "top-left");
 
-  // ---------------- ICON RENDERERS ----------------
-
-  const busRenderer = {
-    type: "simple",
-    symbol: {
-      type: "picture-marker",
-      url: "https://static.arcgis.com/images/Symbols/Transportation/Bus.png",
-      width: "26px",
-      height: "26px"
-    }
+  // ---------------- ICON URLS ----------------
+  const ICONS = {
+    bus: "https://static.arcgis.com/images/Symbols/Transportation/Bus.png",
+    school: "https://static.arcgis.com/images/Symbols/Education/School.png",
+    kindergarten: "https://static.arcgis.com/images/Symbols/PeoplePlaces/ChildCare.png",
+    hospital: "https://static.arcgis.com/images/Symbols/Health/Hospital.png",
+    restaurant: "https://static.arcgis.com/images/Symbols/PeoplePlaces/Restaurant.png",
+    train: "https://static.arcgis.com/images/Symbols/Transportation/Train.png",
+    defaultPoint: "https://static.arcgis.com/images/Symbols/Shapes/BluePin1LargeB.png"
   };
 
-  const schoolRenderer = {
-    type: "simple",
-    symbol: {
+  function pictureSymbol(url, size) {
+    return {
       type: "picture-marker",
-      url: "https://static.arcgis.com/images/Symbols/Education/School.png",
-      width: "26px",
-      height: "26px"
-    }
-  };
+      url: url,
+      width: size || "26px",
+      height: size || "26px"
+    };
+  }
 
-  const kindergartenRenderer = {
-    type: "simple",
-    symbol: {
-      type: "picture-marker",
-      url: "https://static.arcgis.com/images/Symbols/PeoplePlaces/ChildCare.png",
-      width: "26px",
-      height: "26px"
-    }
-  };
+  function simplePictureRenderer(url, size) {
+    return {
+      type: "simple",
+      symbol: pictureSymbol(url, size)
+    };
+  }
 
-  const hospitalRenderer = {
-    type: "simple",
-    symbol: {
-      type: "picture-marker",
-      url: "https://static.arcgis.com/images/Symbols/Health/Hospital.png",
-      width: "28px",
-      height: "28px"
-    }
-  };
+  // ---------------- UNIQUE SERVICE RENDERER ----------------
+  /*
+    IMPORTANT:
+    This renderer separates services based on attribute value.
+    Your GeoJSON should have one of these fields:
+    amenity / type / category / fclass / service
+    Example values:
+    bus_stop, bus, restaurant, cafe, hospital, clinic, doctors, school, kindergarten
+  */
 
-  const restaurantRenderer = {
-    type: "simple",
-    symbol: {
-      type: "picture-marker",
-      url: "https://static.arcgis.com/images/Symbols/PeoplePlaces/Restaurant.png",
-      width: "26px",
-      height: "26px"
-    }
-  };
+  const servicePointRenderer = {
+    type: "unique-value",
+    field: "amenity",
+    defaultSymbol: pictureSymbol(ICONS.defaultPoint, "24px"),
+    uniqueValueInfos: [
+      { value: "bus_stop", symbol: pictureSymbol(ICONS.bus, "26px"), label: "Bus Stop" },
+      { value: "bus", symbol: pictureSymbol(ICONS.bus, "26px"), label: "Bus Stop" },
 
-  const trainStationRenderer = {
-    type: "simple",
-    symbol: {
-      type: "picture-marker",
-      url: "https://static.arcgis.com/images/Symbols/Transportation/Train.png",
-      width: "28px",
-      height: "28px"
-    }
+      { value: "restaurant", symbol: pictureSymbol(ICONS.restaurant, "26px"), label: "Restaurant" },
+      { value: "cafe", symbol: pictureSymbol(ICONS.restaurant, "26px"), label: "Cafe" },
+      { value: "fast_food", symbol: pictureSymbol(ICONS.restaurant, "26px"), label: "Fast Food" },
+
+      { value: "hospital", symbol: pictureSymbol(ICONS.hospital, "28px"), label: "Hospital" },
+      { value: "clinic", symbol: pictureSymbol(ICONS.hospital, "28px"), label: "Clinic" },
+      { value: "doctors", symbol: pictureSymbol(ICONS.hospital, "28px"), label: "Doctors" },
+      { value: "healthcare", symbol: pictureSymbol(ICONS.hospital, "28px"), label: "Healthcare" },
+
+      { value: "school", symbol: pictureSymbol(ICONS.school, "26px"), label: "School" },
+      { value: "kindergarten", symbol: pictureSymbol(ICONS.kindergarten, "26px"), label: "Kindergarten" }
+    ]
   };
 
   // ---------------- POLYGON / LINE RENDERERS ----------------
@@ -356,7 +353,7 @@ require([
   const schoolLayer = new GeoJSONLayer({
     title: "School",
     url: "Oxnehaga_school.geojson",
-    renderer: schoolRenderer,
+    renderer: simplePictureRenderer(ICONS.school, "26px"),
     elevationInfo: { mode: "on-the-ground" },
     outFields: ["*"]
   });
@@ -371,7 +368,7 @@ require([
   const trainStation = new GeoJSONLayer({
     title: "Train Station",
     url: "Huskvarna_train_station.geojson",
-    renderer: trainStationRenderer,
+    renderer: simplePictureRenderer(ICONS.train, "28px"),
     elevationInfo: { mode: "on-the-ground" },
     outFields: ["*"]
   });
@@ -392,7 +389,7 @@ require([
   });
 
   const vardcentralWalking = new GeoJSONLayer({
-    title: "Healthcare Walking Distance",
+    title: "Healthcare Walking Distance Area",
     url: "Vardcentral_walking_distance.geojson",
     renderer: vardcentralWalkingRenderer,
     outFields: ["*"]
@@ -401,29 +398,33 @@ require([
   const kindergartenLayer = new GeoJSONLayer({
     title: "Kindergarten",
     url: "Kinder_Garden.geojson",
-    renderer: kindergartenRenderer,
-    elevationInfo: { mode: "on-the-ground" },
-    outFields: ["*"]
-  });
-
-  const busStopLayer = new GeoJSONLayer({
-    title: "Bus Stop",
-    url: "Bus_stop.geojson",
-    renderer: busRenderer,
+    renderer: simplePictureRenderer(ICONS.kindergarten, "26px"),
     elevationInfo: { mode: "on-the-ground" },
     outFields: ["*"]
   });
 
   /*
-    IMPORTANT:
-    Add these GeoJSON files to your project folder if you have them.
-    If you do not have these files yet, keep these layers commented.
+    This is now named Service Points, not Bus Stop.
+    Use this for mixed points: bus stops, restaurants, hospitals, cafes, etc.
+    If your file contains only bus stops, it will still work.
   */
+  const servicePointsLayer = new GeoJSONLayer({
+    title: "Service Points",
+    url: "Bus_stop.geojson",
+    renderer: servicePointRenderer,
+    elevationInfo: { mode: "on-the-ground" },
+    outFields: ["*"]
+  });
 
+  /*
+    Optional separate files:
+    Keep these only if you really have Hospital.geojson and Restaurant.geojson.
+    If not available, they simply show warning in console.
+  */
   const hospitalLayer = new GeoJSONLayer({
     title: "Hospital / Healthcare",
     url: "Hospital.geojson",
-    renderer: hospitalRenderer,
+    renderer: simplePictureRenderer(ICONS.hospital, "28px"),
     elevationInfo: { mode: "on-the-ground" },
     outFields: ["*"],
     visible: true
@@ -432,13 +433,12 @@ require([
   const restaurantLayer = new GeoJSONLayer({
     title: "Restaurant",
     url: "Restaurant.geojson",
-    renderer: restaurantRenderer,
+    renderer: simplePictureRenderer(ICONS.restaurant, "26px"),
     elevationInfo: { mode: "on-the-ground" },
     outFields: ["*"],
     visible: true
   });
 
-  // Add layers to map
   map.addMany([
     areaLayer,
     mainByggnad,
@@ -449,12 +449,12 @@ require([
     distansLayer,
     vardcentralWalking,
     kindergartenLayer,
-    busStopLayer,
+    servicePointsLayer,
     hospitalLayer,
     restaurantLayer
   ]);
 
-  // ---------------- LAYER LOADING DIAGNOSTICS ----------------
+  // ---------------- DIAGNOSTICS ----------------
 
   function checkLayer(layer, label) {
     layer.when(() => layer.queryFeatureCount())
@@ -462,7 +462,7 @@ require([
       .catch(error => console.warn("[" + label + "] could not load:", error));
   }
 
-  checkLayer(busStopLayer, "Bus Stop");
+  checkLayer(servicePointsLayer, "Service Points");
   checkLayer(schoolLayer, "School");
   checkLayer(kindergartenLayer, "Kindergarten");
   checkLayer(trainStation, "Train Station");
@@ -537,51 +537,89 @@ require([
 
   const analysisGroup = createDropdown("Analysis");
   addToggle("Route from School to Train Station", [schoolLayer, schoolRoute], analysisGroup);
-  addToggle("Healthcare Walking Distance", [vardcentralWalking], analysisGroup);
+  addToggle("Healthcare Walking Distance Area", [vardcentralWalking], analysisGroup);
   addToggle("Distance From Center", [distansLayer], analysisGroup);
 
   const servicesGroup = createDropdown("Services");
+  addToggle("All Service Points", [servicePointsLayer], servicesGroup);
   addToggle("Kindergarten", [kindergartenLayer], servicesGroup);
   addToggle("School", [schoolLayer], servicesGroup);
-  addToggle("Bus Stops", [busStopLayer], servicesGroup);
   addToggle("Hospitals / Healthcare", [hospitalLayer], servicesGroup);
   addToggle("Restaurants", [restaurantLayer], servicesGroup);
 
-  // ---------------- HELPER FUNCTIONS FOR FEATURE IDENTIFICATION ----------------
+  // ---------------- FEATURE CLASSIFICATION ----------------
 
-  function getBestName(attr) {
-    if (!attr) return "Unknown feature";
+  function getAttrValue(attr, keys) {
+    if (!attr) return "";
 
-    return attr.name ||
-           attr.Name ||
-           attr.namn ||
-           attr.Namn ||
-           attr.NAME ||
-           attr.title ||
-           attr.Title ||
-           attr.TITLE ||
-           attr.amenity ||
-           attr.AMENITY ||
-           attr.type ||
-           attr.Type ||
-           attr.TYPE ||
-           attr.objektidentitet ||
-           "Unknown feature";
+    for (const key of keys) {
+      if (attr[key] !== undefined && attr[key] !== null && String(attr[key]).trim() !== "") {
+        return String(attr[key]).trim();
+      }
+    }
+
+    return "";
   }
 
-  function getFeatureIcon(layerTitle) {
-    const title = layerTitle.toLowerCase();
+  function getBestName(attr) {
+    return getAttrValue(attr, [
+      "name", "Name", "NAME",
+      "namn", "Namn", "NAMN",
+      "title", "Title", "TITLE",
+      "operator", "Operator",
+      "objektidentitet"
+    ]) || "Unknown feature";
+  }
 
-    if (title.includes("bus")) return "🚌";
-    if (title.includes("school")) return "🏫";
-    if (title.includes("kindergarten")) return "🧒";
-    if (title.includes("hospital") || title.includes("healthcare")) return "🏥";
-    if (title.includes("restaurant")) return "🍽️";
-    if (title.includes("train")) return "🚆";
-    if (title.includes("building")) return "🏢";
-    if (title.includes("area")) return "🗺️";
+  function classifyFeature(attr, layerTitle) {
+    const raw = (
+      getAttrValue(attr, [
+        "amenity", "Amenity", "AMENITY",
+        "type", "Type", "TYPE",
+        "category", "Category", "CATEGORY",
+        "fclass", "FCLASS",
+        "service", "Service",
+        "highway", "Highway",
+        "public_transport",
+        "shop", "Shop"
+      ]) + " " +
+      getBestName(attr) + " " +
+      layerTitle
+    ).toLowerCase();
 
-    return "📍";
+    if (raw.includes("bus_stop") || raw.includes("bus stop") || raw.includes("bus")) {
+      return { label: "Bus Stop", icon: "🚌" };
+    }
+
+    if (raw.includes("restaurant") || raw.includes("cafe") || raw.includes("fast_food") || raw.includes("food") || raw.includes("pizza") || raw.includes("grill")) {
+      return { label: "Restaurant / Food Place", icon: "🍽️" };
+    }
+
+    if (raw.includes("hospital") || raw.includes("clinic") || raw.includes("doctor") || raw.includes("healthcare") || raw.includes("vård") || raw.includes("vard") || raw.includes("medical")) {
+      return { label: "Hospital / Healthcare", icon: "🏥" };
+    }
+
+    if (raw.includes("kindergarten") || raw.includes("förskola") || raw.includes("forskola") || raw.includes("childcare")) {
+      return { label: "Kindergarten", icon: "🧒" };
+    }
+
+    if (raw.includes("school") || raw.includes("skola")) {
+      return { label: "School", icon: "🏫" };
+    }
+
+    if (raw.includes("train") || raw.includes("station") || raw.includes("railway")) {
+      return { label: "Train Station / Railway", icon: "🚆" };
+    }
+
+    if (raw.includes("building") || raw.includes("byggnad")) {
+      return { label: "Building", icon: "🏢" };
+    }
+
+    if (raw.includes("area") || raw.includes("boundary")) {
+      return { label: "Area / Boundary", icon: "🗺️" };
+    }
+
+    return { label: layerTitle || "Selected Feature", icon: "📍" };
   }
 
   function buildInfoTable(attr) {
@@ -619,7 +657,7 @@ require([
         const attr = graphic.attributes;
         const layerTitle = graphic.layer.title || "Selected Feature";
         const featureName = getBestName(attr);
-        const icon = getFeatureIcon(layerTitle);
+        const classified = classifyFeature(attr, layerTitle);
 
         const project4Btn = document.getElementById("project4Btn");
 
@@ -629,10 +667,10 @@ require([
           project4Btn.style.display = "none";
         }
 
-        let html = `
-          <h3 class="feature-title">${icon} ${featureName}</h3>
-          <div class="feature-type">${layerTitle}</div>
-          <div class="small-note">All available attributes are shown below.</div>
+        const html = `
+          <h3 class="feature-title">${classified.icon} ${featureName}</h3>
+          <div class="feature-type">${classified.label}</div>
+          <div class="small-note">Layer: ${layerTitle}</div>
           ${buildInfoTable(attr)}
         `;
 
