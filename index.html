@@ -1,519 +1,226 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-<meta charset="utf-8">
-<title>Urban Map - Oxnehaga</title>
-
-<link rel="stylesheet" href="https://js.arcgis.com/4.29/esri/themes/light/main.css">
-
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Urban Services Map - Oxnehaga</title>
+<link rel="stylesheet" href="https://js.arcgis.com/4.29/esri/themes/light/main.css" />
 <style>
-html, body {
-  height:100%;
-  width:100%;
-  margin:0;
-  padding:0;
-  display:flex;
-  font-family:'Segoe UI', sans-serif;
-}
-
-#sidePanel {
-  width:280px;
-  background:#1f2a38;
-  color:white;
-  padding:20px;
-  overflow-y:auto;
-}
-
-#viewDiv {
-  flex:1;
-  height:100vh;
-  position:relative;
-}
-
-#infoPanel {
-  position:absolute;
-  top:20px;
-  right:20px;
-  width:340px;
-  max-height:75vh;
-  overflow-y:auto;
-  background:white;
-  border-radius:8px;
-  box-shadow:0 4px 20px rgba(0,0,0,0.4);
-  border:1px solid #ccc;
-  z-index:10;
-}
-
-.info-header {
-  background:#4A90E2;
-  color:white;
-  padding:10px 15px;
-  border-radius:8px 8px 0 0;
-  font-weight:bold;
-}
-
-#infoContent {
-  padding:15px;
-  font-size:13px;
-}
-
-.layer-item {
-  margin-bottom:8px;
-  display:flex;
-  align-items:center;
-  background:rgba(255,255,255,0.1);
-  padding:8px;
-  border-radius:4px;
-}
-
-.layer-item input {
-  margin-right:10px;
-}
-
-.dropdown {
-  margin-bottom:10px;
-}
-
-.dropdown-header {
-  cursor:pointer;
-  font-weight:bold;
-  padding:8px;
-  background:rgba(255,255,255,0.15);
-  border-radius:4px;
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
-}
-
-.dropdown-arrow {
-  transition:0.3s;
-}
-
-.dropdown-content {
-  display:none;
-  margin-top:5px;
-  padding-left:10px;
-}
-
-table {
-  width:100%;
-  border-collapse:collapse;
-}
-
-td {
-  padding:6px 4px;
-  border-bottom:1px solid #eee;
-  vertical-align:top;
-}
-
-.attr-key {
-  font-weight:bold;
-  color:#666;
-  width:45%;
-  font-size:11px;
-  text-transform:uppercase;
-}
-
-#project4Btn {
-  width:100%;
-  padding:8px;
-  background:#4A90E2;
-  color:#fff;
-  border:none;
-  border-radius:4px;
-  cursor:pointer;
-  margin-bottom:15px;
-}
-
-.feature-title {
-  margin:0 0 8px 0;
-  color:#4A90E2;
-  font-size:18px;
-}
-
-.feature-type {
-  display:inline-block;
-  background:#eef5ff;
-  color:#2b6cb0;
-  padding:4px 8px;
-  border-radius:12px;
-  font-size:12px;
-  margin-bottom:10px;
-}
-
-.small-note {
-  font-size:12px;
-  color:#666;
-  margin-bottom:10px;
-}
-
-.search-box{width:100%;box-sizing:border-box;padding:8px;margin:8px 0 12px;border-radius:4px;border:0;}
-.legend-row{font-size:12px;margin:6px 0;opacity:.95;}
-.status{font-size:12px;color:#cbd5e1;margin-top:10px;line-height:1.4;}
+html, body { height:100%; width:100%; margin:0; padding:0; display:flex; font-family:'Segoe UI', Arial, sans-serif; }
+#sidePanel { width:310px; background:#1f2a38; color:#fff; padding:18px; overflow-y:auto; box-sizing:border-box; }
+#viewDiv { flex:1; height:100vh; position:relative; }
+.logo { color:#4A90E2; margin:0; font-size:22px; }
+.sub { font-size:12px; opacity:.8; margin-top:6px; }
+.section-title { margin:18px 0 8px; font-size:13px; text-transform:uppercase; letter-spacing:.08em; color:#9ec8ff; }
+.layer-item { margin-bottom:8px; display:flex; align-items:center; gap:10px; background:rgba(255,255,255,.10); padding:8px; border-radius:6px; font-size:13px; }
+.layer-item input { transform:scale(1.1); }
+.count { margin-left:auto; opacity:.8; font-size:11px; }
+#infoPanel { position:absolute; top:18px; right:18px; width:360px; max-height:78vh; overflow-y:auto; background:#fff; border-radius:10px; box-shadow:0 4px 22px rgba(0,0,0,.35); border:1px solid #d5d5d5; z-index:10; }
+.info-header { background:#4A90E2; color:white; padding:11px 15px; border-radius:10px 10px 0 0; font-weight:700; }
+#infoContent { padding:15px; font-size:13px; color:#222; }
+.feature-title { margin:0 0 8px; color:#2563a8; font-size:18px; }
+.feature-type { display:inline-block; background:#eef5ff; color:#2b6cb0; padding:4px 9px; border-radius:14px; font-size:12px; margin-bottom:10px; }
+.small-note { font-size:12px; color:#666; margin-bottom:10px; }
+table { width:100%; border-collapse:collapse; }
+td { padding:6px 4px; border-bottom:1px solid #eee; vertical-align:top; word-break:break-word; }
+.attr-key { font-weight:bold; color:#666; width:42%; font-size:11px; text-transform:uppercase; }
+#project4Btn { width:100%; padding:9px; background:#4A90E2; color:#fff; border:none; border-radius:6px; cursor:pointer; margin-bottom:12px; display:none; }
+.note { font-size:12px; line-height:1.4; color:#d7e8ff; background:rgba(74,144,226,.15); padding:10px; border-radius:6px; margin-top:14px; }
 </style>
 </head>
-
 <body>
-
 <div id="sidePanel">
-  <h2 style="color:#4A90E2;margin:0;">GIS Web Urban</h2>
-  <p style="font-size:12px;opacity:0.8;margin-top:6px;">Oxnehaga Urban Services Map</p>
-  <hr style="opacity:0.2;margin:15px 0;">
+  <h2 class="logo">GIS Web Urban</h2>
+  <p class="sub">Oxnehaga Urban Services Map</p>
+  <hr style="opacity:.2;margin:15px 0;" />
+  <div class="section-title">Map Layers</div>
   <div id="controls"></div>
+  <div class="note">Service points are separated by category. Hospitals, restaurants, bus stops, schools and kindergartens now use different indicators.</div>
 </div>
-
 <div id="viewDiv">
   <div id="infoPanel">
     <div class="info-header">Feature Details</div>
-    <button id="project4Btn" style="display:none;">Open Project 4</button>
-    <div id="infoContent">Click on a feature to see its details.</div>
+    <button id="project4Btn">Open Project 4</button>
+    <div id="infoContent">Click any map pointer to see whether it is a hospital, restaurant, bus stop, school, or other service.</div>
   </div>
 </div>
-
 <script src="https://js.arcgis.com/4.29/"></script>
-
-<script src="https://js.arcgis.com/4.29/"></script>
-
 <script>
 require([
   "esri/Map",
   "esri/views/SceneView",
   "esri/layers/GeoJSONLayer",
-  "esri/layers/FeatureLayer",
-  "esri/Graphic",
-  "esri/widgets/Home"
-], function(Map, SceneView, GeoJSONLayer, FeatureLayer, Graphic, Home) {
+  "esri/widgets/Home",
+  "esri/widgets/Legend"
+], function(Map, SceneView, GeoJSONLayer, Home, Legend) {
 
-  // ---------------- MAP AND VIEW ----------------
-  const map = new Map({
-    basemap: "topo-vector",
-    ground: "world-elevation"
-  });
+  const map = new Map({ basemap: "topo-vector", ground: "world-elevation" });
 
   const view = new SceneView({
     container: "viewDiv",
-    map: map,
-    camera: {
-      position: { longitude: 14.2622409, latitude: 57.7781582, z: 5000 },
-      tilt: 0
-    },
+    map,
+    camera: { position: { longitude: 14.2622409, latitude: 57.7781582, z: 5000 }, tilt: 0 },
     popupEnabled: false
   });
 
-  view.ui.add(new Home({ view: view }), "top-left");
+  view.ui.add(new Home({ view }), "top-left");
+  view.ui.add(new Legend({ view }), "bottom-left");
 
-  // ---------------- ICON URLS ----------------
+  function svgIcon(emoji, bg) {
+    const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64">
+      <circle cx="32" cy="32" r="28" fill="${bg}" stroke="white" stroke-width="5"/>
+      <text x="32" y="41" text-anchor="middle" font-size="30" font-family="Arial,Segoe UI Emoji">${emoji}</text>
+    </svg>`;
+    return "data:image/svg+xml;charset=UTF-8," + encodeURIComponent(svg);
+  }
+
   const ICONS = {
-    bus: "https://static.arcgis.com/images/Symbols/Transportation/Bus.png",
-    school: "https://static.arcgis.com/images/Symbols/Education/School.png",
-    kindergarten: "https://static.arcgis.com/images/Symbols/PeoplePlaces/ChildCare.png",
-    hospital: "https://static.arcgis.com/images/Symbols/Health/Hospital.png",
-    restaurant: "https://static.arcgis.com/images/Symbols/PeoplePlaces/Restaurant.png",
-    train: "https://static.arcgis.com/images/Symbols/Transportation/Train.png",
-    defaultPoint: "https://static.arcgis.com/images/Symbols/Shapes/BluePin1LargeB.png"
+    bus: svgIcon("🚌", "#2563eb"),
+    hospital: svgIcon("🏥", "#dc2626"),
+    restaurant: svgIcon("🍽️", "#f97316"),
+    school: svgIcon("🏫", "#7c3aed"),
+    kindergarten: svgIcon("🧒", "#16a34a"),
+    train: svgIcon("🚆", "#111827"),
+    other: svgIcon("📍", "#64748b")
   };
 
-  function pictureSymbol(url, size) {
-    return { type: "picture-marker", url, width: size || "26px", height: size || "26px" };
+  function picture(url, size="30px") {
+    return { type:"picture-marker", url, width:size, height:size };
   }
 
-  function simplePictureRenderer(url, size) {
-    return { type: "simple", symbol: pictureSymbol(url, size) };
+  function fill(color, outline, width=2) {
+    return { type:"simple", symbol:{ type:"simple-fill", color, outline:{ color:outline, width } } };
   }
 
-  // ---------------- SMART CLASSIFICATION ----------------
-  // This fixes the earlier problem where all points appeared as bus stops.
-  // It checks many possible OSM/GeoJSON fields and text values, then creates a clean category.
-  function textFromProperties(properties) {
-    const keys = [
-      "amenity", "type", "category", "fclass", "service", "highway",
-      "public_transport", "railway", "healthcare", "shop", "tourism",
-      "name", "namn", "operator", "description"
-    ];
-    return keys.map(k => properties?.[k] || properties?.[k.toUpperCase()] || properties?.[capitalize(k)] || "")
-      .join(" ").toLowerCase();
+  function line(color, width=4, style="solid") {
+    return { type:"simple", symbol:{ type:"simple-line", color, width, style } };
   }
 
-  function capitalize(s) { return s.charAt(0).toUpperCase() + s.slice(1); }
+  function getText(props) {
+    return Object.keys(props || {}).map(k => `${k} ${props[k]}`).join(" ").toLowerCase();
+  }
 
-  function getBestName(properties) {
-    const keys = ["name", "Name", "NAME", "namn", "Namn", "NAMN", "title", "operator", "objektidentitet"];
-    for (const key of keys) {
-      if (properties && properties[key] !== undefined && properties[key] !== null && String(properties[key]).trim() !== "") {
-        return String(properties[key]).trim();
-      }
-    }
+  function getName(props) {
+    const keys = ["name", "Name", "NAME", "namn", "Namn", "NAMN", "title", "operator", "Operator", "objektidentitet"];
+    for (const k of keys) if (props && props[k] !== undefined && props[k] !== null && String(props[k]).trim() !== "") return String(props[k]).trim();
     return "Unknown feature";
   }
 
-  function classifyProperties(properties, layerTitle = "") {
-    const raw = (textFromProperties(properties) + " " + layerTitle).toLowerCase();
-
-    if (raw.includes("restaurant") || raw.includes("cafe") || raw.includes("fast_food") || raw.includes("food") || raw.includes("pizza") || raw.includes("grill") || raw.includes("bar") || raw.includes("pub")) {
-      return { key: "restaurant", label: "Restaurant / Food Place", icon: "🍽️", symbol: pictureSymbol(ICONS.restaurant, "28px") };
-    }
-    if (raw.includes("hospital") || raw.includes("clinic") || raw.includes("doctor") || raw.includes("healthcare") || raw.includes("vård") || raw.includes("vard") || raw.includes("medical") || raw.includes("pharmacy") || raw.includes("apotek")) {
-      return { key: "hospital", label: "Hospital / Healthcare", icon: "🏥", symbol: pictureSymbol(ICONS.hospital, "30px") };
-    }
-    if (raw.includes("kindergarten") || raw.includes("förskola") || raw.includes("forskola") || raw.includes("childcare") || raw.includes("preschool")) {
-      return { key: "kindergarten", label: "Kindergarten", icon: "🧒", symbol: pictureSymbol(ICONS.kindergarten, "28px") };
-    }
-    if (raw.includes("school") || raw.includes("skola")) {
-      return { key: "school", label: "School", icon: "🏫", symbol: pictureSymbol(ICONS.school, "28px") };
-    }
-    if (raw.includes("train") || raw.includes("station") || raw.includes("railway")) {
-      return { key: "train", label: "Train Station / Railway", icon: "🚆", symbol: pictureSymbol(ICONS.train, "30px") };
-    }
-    if (raw.includes("bus_stop") || raw.includes("bus stop") || raw.includes("bus") || raw.includes("public_transport") || raw.includes("platform")) {
-      return { key: "bus", label: "Bus Stop", icon: "🚌", symbol: pictureSymbol(ICONS.bus, "28px") };
-    }
-    if (raw.includes("building") || raw.includes("byggnad")) {
-      return { key: "building", label: "Building", icon: "🏢", symbol: pictureSymbol(ICONS.defaultPoint, "24px") };
-    }
-    return { key: "other", label: "Other Service Point", icon: "📍", symbol: pictureSymbol(ICONS.defaultPoint, "24px") };
+  function classify(props) {
+    const t = getText(props);
+    if (/hospital|clinic|doctor|doctors|healthcare|medical|vård|vard|vårdcentral|vardcentral|hälsa|halsa/.test(t)) return { type:"Hospital / Healthcare", icon:"🏥" };
+    if (/restaurant|restaurang|cafe|café|fast_food|food|pizza|grill|kebab|sushi|thai|pizzeria|bar|pub/.test(t)) return { type:"Restaurant / Food", icon:"🍽️" };
+    if (/bus_stop|bus stop|busstation|busshållplats|busshallplats|hållplats|hallplats/.test(t)) return { type:"Bus Stop", icon:"🚌" };
+    if (/kindergarten|förskola|forskola|childcare|preschool|dagis/.test(t)) return { type:"Kindergarten", icon:"🧒" };
+    if (/school|skola|education|college|university/.test(t)) return { type:"School", icon:"🏫" };
+    if (/train|railway|station|järnväg|jarnvag/.test(t)) return { type:"Train Station / Railway", icon:"🚆" };
+    return { type:"Other Service", icon:"📍" };
   }
 
-  // ---------------- RENDERERS ----------------
-  const areaRenderer = { type:"simple", symbol:{ type:"simple-fill", color:[0,0,0,0], outline:{ color:"#00aa00", width:3 } } };
-  const trainLineRenderer = { type:"simple", symbol:{ type:"simple-line", color:"#ff0000", width:4, style:"dash" } };
-  const schoolRouteRenderer = { type:"simple", symbol:{ type:"simple-line", color:"#8A2BE2", width:5 } };
-  const vardcentralWalkingRenderer = { type:"simple", symbol:{ type:"simple-fill", color:[0,200,0,0.35], outline:{ color:[0,150,0], width:2 } } };
-  const distanceRenderer = { type:"simple", symbol:{ type:"simple-fill", color:[255,165,0,0.3], outline:{ color:[255,140,0], width:2 } } };
-
-  const buildingRenderer = {
-    type: "unique-value",
-    field: "objektidentitet",
-    defaultSymbol: { type: "polygon-3d", symbolLayers: [{ type: "extrude", size: 2, material: { color: "#d9d9d9" }, edges: { type: "solid", color: "#888", size: 0.6 } }] },
-    uniqueValueInfos: [{
-      value: "86068c15-afde-4284-90fc-ad8735b25416",
-      symbol: { type: "polygon-3d", symbolLayers: [{ type: "extrude", size: 2, material: { color: "#ff0000" }, edges: { type: "solid", color: "#888", size: 0.6 } }] }
-    }]
-  };
-
-  const serviceRenderer = {
-    type: "unique-value",
-    field: "category",
-    defaultSymbol: pictureSymbol(ICONS.defaultPoint, "24px"),
-    uniqueValueInfos: [
-      { value: "bus", symbol: pictureSymbol(ICONS.bus, "28px"), label: "Bus Stop" },
-      { value: "restaurant", symbol: pictureSymbol(ICONS.restaurant, "28px"), label: "Restaurant / Cafe" },
-      { value: "hospital", symbol: pictureSymbol(ICONS.hospital, "30px"), label: "Healthcare" },
-      { value: "school", symbol: pictureSymbol(ICONS.school, "28px"), label: "School" },
-      { value: "kindergarten", symbol: pictureSymbol(ICONS.kindergarten, "28px"), label: "Kindergarten" },
-      { value: "train", symbol: pictureSymbol(ICONS.train, "30px"), label: "Train" }
-    ]
-  };
-
-  // ---------------- NORMAL GEOJSON LAYERS ----------------
-  const areaLayer = new GeoJSONLayer({ title: "Oxnehaga Area Boundary", url: "Oxnehaga-Area.geojson", renderer: areaRenderer, outFields: ["*"] });
-  const mainByggnad = new GeoJSONLayer({ title: "Main Buildings", url: "Main_byggnad.geojson", elevationInfo: { mode: "on-the-ground" }, renderer: buildingRenderer, outFields: ["*"] });
-  const schoolLayer = new GeoJSONLayer({ title: "School", url: "Oxnehaga_school.geojson", renderer: simplePictureRenderer(ICONS.school, "26px"), elevationInfo: { mode: "on-the-ground" }, outFields: ["*"] });
-  const schoolRoute = new GeoJSONLayer({ title: "Route from School to Train Station", url: "Oxnehaga_school_route.geojson", renderer: schoolRouteRenderer, outFields: ["*"] });
-  const trainStation = new GeoJSONLayer({ title: "Train Station", url: "Huskvarna_train_station.geojson", renderer: simplePictureRenderer(ICONS.train, "28px"), elevationInfo: { mode: "on-the-ground" }, outFields: ["*"] });
-  const trainLines = new GeoJSONLayer({ title: "Train Line", url: "train.geojson", renderer: trainLineRenderer, outFields: ["*"] });
-  const distansLayer = new GeoJSONLayer({ title: "Distance from City Center", url: "Distans_from_centrum.geojson", visible: false, renderer: distanceRenderer, outFields: ["*"] });
-  const vardcentralWalking = new GeoJSONLayer({ title: "Healthcare Walking Distance Area", url: "Vardcentral_walking_distance.geojson", renderer: vardcentralWalkingRenderer, outFields: ["*"] });
-  const kindergartenLayer = new GeoJSONLayer({ title: "Kindergarten", url: "Kinder_Garden.geojson", renderer: simplePictureRenderer(ICONS.kindergarten, "26px"), elevationInfo: { mode: "on-the-ground" }, outFields: ["*"] });
-
-  map.addMany([areaLayer, mainByggnad, schoolLayer, schoolRoute, trainStation, trainLines, distansLayer, vardcentralWalking, kindergartenLayer]);
-
-  // ---------------- SMART SERVICE POINT LAYER FROM GEOJSON ----------------
-  async function createSmartServiceLayer(url) {
-    const response = await fetch(url);
-    if (!response.ok) throw new Error("Cannot load " + url);
-    const geojson = await response.json();
-    let oid = 1;
-
-    const graphics = [];
-    const counts = { bus:0, restaurant:0, hospital:0, school:0, kindergarten:0, train:0, other:0 };
-
-    function addPoint(coords, properties) {
-      if (!coords || coords.length < 2) return;
-      const classified = classifyProperties(properties, "Service Points");
-      counts[classified.key] = (counts[classified.key] || 0) + 1;
-      graphics.push(new Graphic({
-        geometry: { type: "point", longitude: coords[0], latitude: coords[1] },
-        attributes: {
-          ObjectID: oid++,
-          name: getBestName(properties),
-          category: classified.key,
-          categoryLabel: classified.label,
-          icon: classified.icon,
-          details: JSON.stringify(properties || {}, null, 2)
-        }
-      }));
-    }
-
-    (geojson.features || []).forEach(feature => {
-      const geometry = feature.geometry || {};
-      const properties = feature.properties || {};
-      if (geometry.type === "Point") addPoint(geometry.coordinates, properties);
-      if (geometry.type === "MultiPoint") (geometry.coordinates || []).forEach(c => addPoint(c, properties));
+  async function buildServiceLayer(sourceFile, category, title, iconUrl, visible=true) {
+    const response = await fetch(sourceFile);
+    if (!response.ok) throw new Error(sourceFile + " could not be loaded");
+    const data = await response.json();
+    data.features = (data.features || []).filter(f => {
+      const c = classify(f.properties || {});
+      f.properties = f.properties || {};
+      f.properties.service_type = c.type;
+      f.properties.display_name = getName(f.properties);
+      return !category || c.type === category;
     });
-
-    document.getElementById("serviceStatus").innerHTML =
-      `Loaded service points: ${graphics.length}<br>` +
-      `🚌 ${counts.bus || 0} &nbsp; 🍽️ ${counts.restaurant || 0} &nbsp; 🏥 ${counts.hospital || 0}<br>` +
-      `🏫 ${counts.school || 0} &nbsp; 🧒 ${counts.kindergarten || 0} &nbsp; 📍 ${counts.other || 0}`;
-
-    return new FeatureLayer({
-      title: "Smart Service Points",
-      source: graphics,
-      objectIdField: "ObjectID",
-      fields: [
-        { name: "ObjectID", alias: "ObjectID", type: "oid" },
-        { name: "name", alias: "Name", type: "string" },
-        { name: "category", alias: "Category", type: "string" },
-        { name: "categoryLabel", alias: "Category Label", type: "string" },
-        { name: "icon", alias: "Icon", type: "string" },
-        { name: "details", alias: "Original Properties", type: "string" }
-      ],
-      geometryType: "point",
-      spatialReference: { wkid: 4326 },
-      renderer: serviceRenderer,
-      elevationInfo: { mode: "on-the-ground" },
-      outFields: ["*"]
+    const blobUrl = URL.createObjectURL(new Blob([JSON.stringify(data)], { type:"application/json" }));
+    const layer = new GeoJSONLayer({
+      title,
+      url: blobUrl,
+      visible,
+      elevationInfo: { mode:"on-the-ground" },
+      outFields: ["*"],
+      renderer: { type:"simple", symbol: picture(iconUrl, category === "Hospital / Healthcare" ? "34px" : "30px") }
     });
+    layer._serviceCategory = category || title;
+    return layer;
   }
 
-  // ---------------- UI CONTROLS ----------------
-  const controls = document.getElementById("controls");
+  const areaLayer = new GeoJSONLayer({ title:"Oxnehaga Area Boundary", url:"Oxnehaga-Area.geojson", renderer: fill([0,0,0,0], "#00aa00", 3), outFields:["*"] });
+  const mainByggnad = new GeoJSONLayer({
+    title:"Main Buildings", url:"Main_byggnad.geojson", elevationInfo:{ mode:"on-the-ground" }, outFields:["*"],
+    renderer:{ type:"unique-value", field:"objektidentitet", defaultSymbol:{ type:"polygon-3d", symbolLayers:[{ type:"extrude", size:2, material:{ color:"#d9d9d9" }, edges:{ type:"solid", color:"#888", size:.6 } }] }, uniqueValueInfos:[{ value:"86068c15-afde-4284-90fc-ad8735b25416", symbol:{ type:"polygon-3d", symbolLayers:[{ type:"extrude", size:2, material:{ color:"#ff0000" }, edges:{ type:"solid", color:"#888", size:.6 } }] } }] }
+  });
+  const schoolLayer = new GeoJSONLayer({ title:"School", url:"Oxnehaga_school.geojson", renderer:{ type:"simple", symbol:picture(ICONS.school) }, elevationInfo:{ mode:"on-the-ground" }, outFields:["*"] });
+  const schoolRoute = new GeoJSONLayer({ title:"Route from School to Train Station", url:"Oxnehaga_school_route.geojson", renderer: line("#8A2BE2", 5), outFields:["*"] });
+  const trainStation = new GeoJSONLayer({ title:"Train Station", url:"Huskvarna_train_station.geojson", renderer:{ type:"simple", symbol:picture(ICONS.train, "32px") }, elevationInfo:{ mode:"on-the-ground" }, outFields:["*"] });
+  const trainLines = new GeoJSONLayer({ title:"Train Line", url:"train.geojson", renderer: line("#ff0000", 4, "dash"), outFields:["*"] });
+  const distansLayer = new GeoJSONLayer({ title:"Distance from City Center", url:"Distans_from_centrum.geojson", visible:false, renderer: fill([255,165,0,.3], [255,140,0], 2), outFields:["*"] });
+  const vardcentralWalking = new GeoJSONLayer({ title:"Healthcare Walking Distance Area", url:"Vardcentral_walking_distance.geojson", renderer: fill([0,200,0,.35], [0,150,0], 2), outFields:["*"] });
+  const kindergartenLayer = new GeoJSONLayer({ title:"Kindergarten", url:"Kinder_Garden.geojson", renderer:{ type:"simple", symbol:picture(ICONS.kindergarten) }, elevationInfo:{ mode:"on-the-ground" }, outFields:["*"] });
+
+  map.addMany([areaLayer, mainByggnad, schoolRoute, trainLines, distansLayer, vardcentralWalking]);
+
+  const serviceFile = "Bus_stop.geojson"; // keep your current filename; it now works as the main service-points data file
+  Promise.all([
+    buildServiceLayer(serviceFile, "Bus Stop", "Bus Stops", ICONS.bus, true),
+    buildServiceLayer(serviceFile, "Hospital / Healthcare", "Hospitals / Healthcare", ICONS.hospital, true),
+    buildServiceLayer(serviceFile, "Restaurant / Food", "Restaurants / Food Places", ICONS.restaurant, true),
+    buildServiceLayer(serviceFile, "Other Service", "Other Service Points", ICONS.other, false)
+  ]).then(serviceLayers => {
+    map.addMany([schoolLayer, kindergartenLayer, trainStation, ...serviceLayers]);
+    createControls(serviceLayers);
+  }).catch(err => {
+    console.error(err);
+    map.addMany([schoolLayer, kindergartenLayer, trainStation]);
+    createControls([]);
+    document.getElementById("infoContent").innerHTML = "Service points could not load. Check Bus_stop.geojson file name and GitHub path.";
+  });
+
   document.getElementById("project4Btn").onclick = () => { window.location.href = "Project4.html"; };
 
-  function createDropdown(title, opened = false) {
-    const container = document.createElement("div");
-    container.className = "dropdown";
-    const header = document.createElement("div");
-    header.className = "dropdown-header";
-    const text = document.createElement("span"); text.innerText = title;
-    const arrow = document.createElement("span"); arrow.innerHTML = "▶"; arrow.className = "dropdown-arrow";
-    header.appendChild(text); header.appendChild(arrow);
-    const content = document.createElement("div"); content.className = "dropdown-content";
-    content.style.display = opened ? "block" : "none";
-    arrow.style.transform = opened ? "rotate(90deg)" : "rotate(0deg)";
-    header.onclick = () => {
-      const open = content.style.display === "block";
-      content.style.display = open ? "none" : "block";
-      arrow.style.transform = open ? "rotate(0deg)" : "rotate(90deg)";
-    };
-    container.appendChild(header); container.appendChild(content); controls.appendChild(container);
-    return content;
+  function addToggle(label, layers) {
+    const div = document.createElement("div"); div.className = "layer-item";
+    const chk = document.createElement("input"); chk.type = "checkbox"; chk.checked = layers.every(l => l.visible !== false);
+    chk.onchange = e => layers.forEach(l => l.visible = e.target.checked);
+    const span = document.createElement("span"); span.textContent = label;
+    div.appendChild(chk); div.appendChild(span); document.getElementById("controls").appendChild(div);
   }
 
-  function addToggle(label, layers, parent) {
-    const div = document.createElement("div"); div.className = "layer-item";
-    const chk = document.createElement("input"); chk.type = "checkbox"; chk.checked = layers.every(layer => layer.visible !== false);
-    chk.onchange = (event) => { layers.forEach(layer => layer.visible = event.target.checked); };
-    const span = document.createElement("span"); span.innerText = label;
-    div.appendChild(chk); div.appendChild(span); parent.appendChild(div);
+  function createControls(serviceLayers) {
+    addToggle("Area Boundary", [areaLayer]);
+    addToggle("Main Buildings", [mainByggnad]);
+    addToggle("Train Info", [trainStation, trainLines]);
+    addToggle("School Route", [schoolLayer, schoolRoute]);
+    addToggle("Healthcare Walking Distance", [vardcentralWalking]);
+    addToggle("Distance From Center", [distansLayer]);
+    addToggle("Kindergarten", [kindergartenLayer]);
+    serviceLayers.forEach(layer => addToggle(layer.title, [layer]));
   }
 
   function buildInfoTable(attr) {
     let html = "<table>";
-    Object.keys(attr || {}).forEach(key => {
-      if (["ObjectID", "details"].includes(key)) return;
-      const value = attr[key];
-      if (value !== null && value !== undefined && value !== "") {
-        html += `<tr><td class="attr-key">${key}</td><td>${value}</td></tr>`;
-      }
+    Object.keys(attr || {}).forEach(k => {
+      if (k.startsWith("__")) return;
+      const v = attr[k];
+      if (v !== null && v !== undefined && String(v).trim() !== "") html += `<tr><td class="attr-key">${k}</td><td>${v}</td></tr>`;
     });
-
-    if (attr?.details) {
-      try {
-        const details = JSON.parse(attr.details);
-        Object.keys(details).forEach(key => {
-          const value = details[key];
-          if (value !== null && value !== undefined && value !== "") {
-            html += `<tr><td class="attr-key">${key}</td><td>${value}</td></tr>`;
-          }
-        });
-      } catch (e) {}
-    }
-    html += "</table>";
-    return html;
+    return html + "</table>";
   }
 
-  function classifyClickedFeature(attr, layerTitle) {
-    if (attr?.categoryLabel) return { label: attr.categoryLabel, icon: attr.icon || "📍" };
-    return classifyProperties(attr || {}, layerTitle);
-  }
-
-  // ---------------- INITIALIZE ----------------
-  async function init() {
-    const serviceStatus = document.createElement("div");
-    serviceStatus.id = "serviceStatus";
-    serviceStatus.className = "status";
-    serviceStatus.innerHTML = "Loading service points...";
-
-    const generalGroup = createDropdown("General Information", true);
-    addToggle("Area Boundary", [areaLayer], generalGroup);
-    addToggle("Main Buildings", [mainByggnad], generalGroup);
-    addToggle("Train Info", [trainStation, trainLines], generalGroup);
-
-    const analysisGroup = createDropdown("Analysis");
-    addToggle("Route from School to Train Station", [schoolLayer, schoolRoute], analysisGroup);
-    addToggle("Healthcare Walking Distance Area", [vardcentralWalking], analysisGroup);
-    addToggle("Distance From Center", [distansLayer], analysisGroup);
-
-    const servicesGroup = createDropdown("Services", true);
-    addToggle("Kindergarten", [kindergartenLayer], servicesGroup);
-
-    let servicePointsLayer;
-    try {
-      servicePointsLayer = await createSmartServiceLayer("Bus_stop.geojson");
-      map.add(servicePointsLayer);
-      addToggle("Smart Service Points", [servicePointsLayer], servicesGroup);
-      servicesGroup.appendChild(serviceStatus);
-    } catch (error) {
-      console.warn(error);
-      serviceStatus.innerHTML = "Could not load Bus_stop.geojson. Check file name and location.";
-      servicesGroup.appendChild(serviceStatus);
-    }
-
-    const legend = document.createElement("div");
-    legend.innerHTML = `
-      <hr style="opacity:0.2;margin:15px 0;">
-      <div class="legend-row">🚌 Bus Stop</div>
-      <div class="legend-row">🍽️ Restaurant / Cafe</div>
-      <div class="legend-row">🏥 Healthcare</div>
-      <div class="legend-row">🏫 School</div>
-      <div class="legend-row">🧒 Kindergarten</div>
-      <div class="legend-row">🚆 Train</div>`;
-    controls.appendChild(legend);
-  }
-
-  init();
-
-  // ---------------- CLICK / HIT TEST ----------------
-  view.on("click", (event) => {
-    view.hitTest(event).then((response) => {
-      const results = response.results.filter(result => result.graphic && result.graphic.layer);
-      if (!results.length) {
+  view.on("click", event => {
+    view.hitTest(event).then(response => {
+      const hit = response.results.find(r => r.graphic && r.graphic.layer && r.graphic.layer.type === "geojson");
+      if (!hit) {
         document.getElementById("project4Btn").style.display = "none";
         document.getElementById("infoContent").innerHTML = "No feature selected.";
         return;
       }
-
-      const graphic = results[0].graphic;
+      const graphic = hit.graphic;
       const attr = graphic.attributes || {};
       const layerTitle = graphic.layer.title || "Selected Feature";
-      const featureName = attr.name || getBestName(attr);
-      const classified = classifyClickedFeature(attr, layerTitle);
-      const project4Btn = document.getElementById("project4Btn");
-
-      if (attr.objektidentitet === "86068c15-afde-4284-90fc-ad8735b25416") project4Btn.style.display = "";
-      else project4Btn.style.display = "none";
-
-      document.getElementById("infoContent").innerHTML = `
-        <h3 class="feature-title">${classified.icon} ${featureName}</h3>
-        <div class="feature-type">${classified.label}</div>
-        <div class="small-note">Layer: ${layerTitle}</div>
-        ${buildInfoTable(attr)}
-      `;
+      const c = attr.service_type ? { type:attr.service_type, icon: classify(attr).icon } : classify(Object.assign({}, attr, { layerTitle }));
+      const name = attr.display_name || getName(attr);
+      document.getElementById("project4Btn").style.display = attr.objektidentitet === "86068c15-afde-4284-90fc-ad8735b25416" ? "" : "none";
+      document.getElementById("infoContent").innerHTML = `<h3 class="feature-title">${c.icon} ${name}</h3><div class="feature-type">${c.type}</div><div class="small-note">Layer: ${layerTitle}</div>${buildInfoTable(attr)}`;
     });
   });
 });
 </script>
-
 </body>
 </html>
